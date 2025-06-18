@@ -3,7 +3,7 @@
     "name": "FRONTEND_MOBILE",
     "slug": "FRONTEND_MOBILE",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "landscape",
     "icon": "./assets/images/icon.png",
     "scheme": "frontendmobile",
     "userInterfaceStyle": "automatic",
