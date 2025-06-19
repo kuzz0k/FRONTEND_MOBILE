@@ -1,4 +1,6 @@
 import { authSchema } from '@/constants/consts';
+import { useAppDispatch, useAppSelector } from '@/hooks/redux';
+import { login } from '@/store/reducers/authSlice';
 import { AuthType } from '@/types/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import React from 'react';
@@ -14,6 +16,9 @@ import {
 } from 'react-native';
 
 const AuthPage: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const isAuth = useAppSelector(state => state.user.isAuth);
+
   const {
     control,
     handleSubmit,
@@ -24,6 +29,8 @@ const AuthPage: React.FC = () => {
 
   const onSubmit = (data: AuthType) => {
     console.log('Авторизация', data);
+    console.log(isAuth);
+    dispatch(login())
     // Здесь логика: запрос на бэк и переход к карте
   };
 
