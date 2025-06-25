@@ -1,9 +1,10 @@
 import { useAppSelector } from '@/hooks/redux';
 import { WebSocketService } from '@/services/WebSocket';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import AuthPage from './AuthPage';
+import MainPage from './MainPage';
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -20,10 +21,7 @@ export default function RootLayout() {
 
   return (
     <>
-      <Stack initialRouteName={isAuth ? "MainPage" : "AuthPage"}>
-        <Stack.Screen name="AuthPage" options={{ headerShown: false }} />
-        <Stack.Screen name="MainPage" options={{ title: 'Map' }} />
-      </Stack>
+      {isAuth ? <MainPage /> : <AuthPage />}
       <StatusBar style="auto" />
     </>
   );
