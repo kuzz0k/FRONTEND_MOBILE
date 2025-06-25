@@ -1,11 +1,11 @@
-import { createSlice } from "@reduxjs/toolkit"
+import { createSlice } from "@reduxjs/toolkit";
 
 export interface apiStateType {
   url: string;
 }
 
 const initialState: apiStateType = {
-  url: 'ws://192.168.31.50:8079/ws',
+  url: 'ws://192.168.31.50:8000/livestream/mog',
 }
 
 export const apiSlice = createSlice({

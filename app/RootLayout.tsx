@@ -1,4 +1,5 @@
 import { useAppSelector } from '@/hooks/redux';
+import { WebSocketService } from '@/services/WebSocket';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -13,6 +14,7 @@ export default function RootLayout() {
   });
 
   const isAuth = useAppSelector(state => state.user.isAuth);
+  WebSocketService.connect();
   
   if (!loaded) return null;
 

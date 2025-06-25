@@ -1,7 +1,9 @@
+import { getUrl } from "./globals";
+
 type MessageHandler = (message: MessageEvent) => void;
 
 class WebSocketAuth {
-  private WS_URL: string;
+  private WS_URL: string = getUrl();
   private socket: WebSocket | null = null;
   private reconnectInterval = 5000;
   private shouldReconnect: boolean = true;
@@ -11,9 +13,6 @@ class WebSocketAuth {
   private isConnecting: boolean = false;
   private reconnectTimeout: NodeJS.Timeout | null = null;
 
-  constructor(URL: string) {
-    this.WS_URL = URL;
-  }
 
   get isConnected(): boolean {
     return this.socket?.readyState === WebSocket.OPEN;
@@ -29,7 +28,7 @@ class WebSocketAuth {
     this.cleanupSocket();
 
     try {
-      this.socket = new WebSocket(`${this.WS_URL}?privet=testtoken123`);
+      this.socket = new WebSocket(`${this.WS_URL}?token=mobilkabarsik`);
 
       this.socket.onopen = () => {
         console.log("Соединение с сервером установлено");
@@ -128,4 +127,4 @@ class WebSocketAuth {
   }
 }
 
-export const WebSocketService = new WebSocketAuth('ws://192.168.31.50:8079/ws');
+export const WebSocketService = new WebSocketAuth();
