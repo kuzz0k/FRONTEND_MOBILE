@@ -13,7 +13,7 @@ export const apiSlice = createSlice({
   initialState,
   reducers: {
     test() {
-        console.log('Slice is working')
+      console.log('Slice is working')
     }
   }
 })
