@@ -33,6 +33,8 @@ export default function MainPage() {
     longitudeDelta: 0.0421,
   });
 
+  const [dragCoord, setDragCoord] = useState<{ latitude: number; longitude: number } | null>(null);
+
   const initialRegion: Region = {
     latitude: 55.7558, // Москва
     longitude: 37.6173,
@@ -94,6 +96,12 @@ export default function MainPage() {
     mapRef.current?.animateToRegion(newRegion, 300);
   };
 
+  // Этот метод вызывается при любом движении пальца по карте
+  const handlePanDrag = (event: any) => {
+    const { coordinate } = event.nativeEvent;
+    setDragCoord(coordinate);
+  };
+
   return (
     <View style={styles.container}>
       <MapView
@@ -109,6 +117,7 @@ export default function MainPage() {
         scrollEnabled={true}
         onPress={handleMapPress}
         onRegionChangeComplete={handleRegionChange}
+        onPanDrag={handlePanDrag}
       >
         {markers.map((marker) => (
           <Marker
@@ -129,6 +138,14 @@ export default function MainPage() {
           <Text style={styles.zoomButtonText}>-</Text>
         </TouchableOpacity>
       </View>
+
+      {dragCoord && (
+        <View style={styles.bottomModal}>
+          <Text style={styles.coordText}>
+            Текущие координаты: {dragCoord.latitude.toFixed(4)}, {dragCoord.longitude.toFixed(4)}
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -169,5 +186,24 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
+  },
+  bottomModal: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    maxWidth: '70%',
+    padding: 12,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    alignItems: 'center',
+  },
+  coordText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
 });
