@@ -1,5 +1,4 @@
 import { useAppSelector } from '@/hooks/redux';
-import { WebSocketService } from '@/services/WebSocket';
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
@@ -15,7 +14,7 @@ export default function RootLayout() {
   });
 
   const isAuth = useAppSelector(state => state.user.isAuth);
-  WebSocketService.connect();
+  // WebSocketService.connect();
   
   if (!loaded) return null;
 
