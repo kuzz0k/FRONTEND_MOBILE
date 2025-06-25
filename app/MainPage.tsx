@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Alert, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, Region } from 'react-native-maps';
+import HeaderModal from '../components/HeaderModal';
 
 const { width, height } = Dimensions.get('window');
 
@@ -34,6 +35,9 @@ export default function MainPage() {
   });
 
   const [dragCoord, setDragCoord] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [isReady, setIsReady] = useState(false);
+  const [notifications] = useState(3);
+  const [userName] = useState('Пользователь');
 
   const initialRegion: Region = {
     latitude: 55.7558, // Москва
@@ -96,14 +100,32 @@ export default function MainPage() {
     mapRef.current?.animateToRegion(newRegion, 300);
   };
 
-  // Этот метод вызывается при любом движении пальца по карте
   const handlePanDrag = (event: any) => {
     const { coordinate } = event.nativeEvent;
     setDragCoord(coordinate);
   };
 
+  const handleGetRoute = () => {
+    console.log('Получить маршрут');
+  };
+
+  const handleReadyToggle = () => {
+    setIsReady(!isReady);
+  };
+
   return (
     <View style={styles.container}>
+      <HeaderModal
+        isVisible={true}
+        coords={dragCoord || currentRegion}
+        timestamp={new Date()}
+        onGetRoute={handleGetRoute}
+        onReadyToggle={handleReadyToggle}
+        isReady={isReady}
+        notifications={notifications}
+        userName={userName}
+      />
+
       <MapView
         ref={mapRef}
         style={styles.map}
@@ -138,14 +160,6 @@ export default function MainPage() {
           <Text style={styles.zoomButtonText}>-</Text>
         </TouchableOpacity>
       </View>
-
-      {dragCoord && (
-        <View style={styles.bottomModal}>
-          <Text style={styles.coordText}>
-            Текущие координаты: {dragCoord.latitude.toFixed(4)}, {dragCoord.longitude.toFixed(4)}
-          </Text>
-        </View>
-      )}
     </View>
   );
 }
@@ -186,24 +200,5 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
-  },
-  bottomModal: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    maxWidth: '70%',
-    padding: 12,
-    backgroundColor: 'white',
-    borderRadius: 12,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    alignItems: 'center',
-  },
-  coordText: {
-    fontSize: 16,
-    fontWeight: '500',
   },
 });
