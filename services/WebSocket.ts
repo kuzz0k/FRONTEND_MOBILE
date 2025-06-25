@@ -8,7 +8,7 @@ class WebSocketAuth {
   private reconnectInterval = 5000;
   private shouldReconnect: boolean = true;
   private messageHandler: MessageHandler | null = null;
-  private maxReconnectAttempts: number = 50;
+  private maxReconnectAttempts: number = 5;
   private currentReconnectAttempts: number = 0;
   private isConnecting: boolean = false;
   private reconnectTimeout: NodeJS.Timeout | null = null;

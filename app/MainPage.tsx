@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react';
-import { Alert, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { Alert, Dimensions, StyleSheet, View, TouchableOpacity, Text } from 'react-native';
 import MapView, { Marker, Region } from 'react-native-maps';
 
 const { width, height } = Dimensions.get('window');
@@ -104,22 +104,11 @@ export default function MainPage() {
         showsMyLocationButton={true}
         showsCompass={true}
         showsScale={true}
+        zoomControlEnabled={false}
+        zoomEnabled={true}
+        scrollEnabled={true}
         onPress={handleMapPress}
         onRegionChangeComplete={handleRegionChange}
-        showsPointsOfInterest={false}
-        showsBuildings={false}
-        showsTraffic={false}
-        showsIndoors={false}
-        rotateEnabled={true}
-        scrollEnabled={true}
-        zoomEnabled={true}
-        pitchEnabled={true}
-        toolbarEnabled={false}
-        mapType="standard"
-        liteMode={false}
-        loadingEnabled={false}
-        loadingIndicatorColor="#666666"
-        loadingBackgroundColor="#eeeeee"
       >
         {markers.map((marker) => (
           <Marker
@@ -131,7 +120,7 @@ export default function MainPage() {
         ))}
       </MapView>
 
-      {/* Кнопки зума */}
+      {/* Кнопки зума по центру справа */}
       <View style={styles.zoomControls}>
         <TouchableOpacity style={styles.zoomButton} onPress={zoomIn}>
           <Text style={styles.zoomButtonText}>+</Text>
@@ -155,7 +144,8 @@ const styles = StyleSheet.create({
   zoomControls: {
     position: 'absolute',
     right: 20,
-    bottom: 100,
+    top: '50%',
+    transform: [{ translateY: -50 }],
     flexDirection: 'column',
   },
   zoomButton: {
