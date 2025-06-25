@@ -3,5 +3,11 @@ import { store } from "@/store/store";
 export const getUrl = () => {
   const state = store.getState();
 
-  return state.api.url;
+  return state.api.wsUrl;
+}
+
+export const getLoginUrl = () => {
+  const state = store.getState();
+
+  return state.api.loginUrl;
 }

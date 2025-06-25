@@ -3,6 +3,12 @@ import { z } from "zod";
 
 export type AuthType = z.infer<typeof authSchema>
 
+export type LoginResponse = {
+  access_token: string,
+  refresh_token: string,
+  expires_in: number
+}
+
 export type Coordinates = {
   lat: number,
   lng: number,

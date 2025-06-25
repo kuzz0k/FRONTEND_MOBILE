@@ -1,10 +1,12 @@
-import { authSchema } from '@/constants/consts';
-import { useAppDispatch, useAppSelector } from '@/hooks/redux';
-import { login } from '@/store/reducers/authSlice';
-import { AuthType } from '@/types/types';
-import { zodResolver } from '@hookform/resolvers/zod';
-import React from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { authSchema } from "@/constants/consts"
+import { useAppDispatch } from "@/hooks/redux"
+import { useLoginUserMutation } from "@/services/loginUser"
+import { userSlice } from "@/store/reducers/authSlice"
+import { AuthType } from "@/types/types"
+import { zodResolver } from "@hookform/resolvers/zod"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import React from "react"
+import { Controller, useForm } from "react-hook-form"
 import {
   KeyboardAvoidingView,
   Platform,
@@ -13,11 +15,11 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
+} from "react-native"
 
 const AuthPage: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const isAuth = useAppSelector(state => state.user.isAuth);
+  const dispatch = useAppDispatch()
+  const [loginUser] = useLoginUserMutation()
 
   const {
     control,
@@ -25,19 +27,23 @@ const AuthPage: React.FC = () => {
     formState: { errors },
   } = useForm<AuthType>({
     resolver: zodResolver(authSchema),
-  });
+  })
 
-  const onSubmit = (data: AuthType) => {
-    console.log('Авторизация', data);
-    console.log(isAuth);
-    dispatch(login())
-    // Здесь логика: запрос на бэк и переход к карте
-  };
+  const onSubmit = async (formData: AuthType) => {
+    try {
+      await loginUser(formData).unwrap()
+      await AsyncStorage.setItem("authStatus", "ok")
+
+      dispatch(userSlice.actions.login())
+    } catch (err) {
+      console.error("Ошибка логина:", err)
+    }
+  }
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <View style={styles.form}>
         <Text style={styles.title}>Вход</Text>
@@ -79,68 +85,71 @@ const AuthPage: React.FC = () => {
           <Text style={styles.errorText}>{errors.password.message}</Text>
         )}
 
-        <TouchableOpacity style={styles.button} onPress={handleSubmit(onSubmit)}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleSubmit(onSubmit)}
+        >
           <Text style={styles.buttonText}>Войти</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
-  );
-};
+  )
+}
 
-export default AuthPage;
+export default AuthPage
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center', 
-    alignItems: 'center',
-    backgroundColor: 'grey',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "grey",
   },
   form: {
-    width: '30%',
-    backgroundColor: 'white',
+    width: "30%",
+    backgroundColor: "white",
     padding: 24,
     borderRadius: 12,
     elevation: 6,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
   title: {
     fontSize: 24,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 16,
   },
   label: {
     marginBottom: 4,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 6,
     padding: 10,
     marginBottom: 10,
   },
   errorInput: {
-    borderColor: 'red',
+    borderColor: "red",
   },
   errorText: {
-    color: 'red',
+    color: "red",
     marginBottom: 10,
     fontSize: 12,
   },
   button: {
-    backgroundColor: '#4a90e2',
+    backgroundColor: "#4a90e2",
     paddingVertical: 12,
     borderRadius: 6,
     marginTop: 8,
   },
   buttonText: {
-    color: 'white',
-    textAlign: 'center',
-    fontWeight: '600',
+    color: "white",
+    textAlign: "center",
+    fontWeight: "600",
     fontSize: 16,
   },
-});
+})

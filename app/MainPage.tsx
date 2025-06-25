@@ -1,117 +1,134 @@
-import React, { useRef, useState } from 'react';
-import { Alert, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import MapView, { Marker, Region } from 'react-native-maps';
-import HeaderModal from '../components/HeaderModal';
+import React, { useEffect, useRef, useState } from "react"
+import {
+  Alert,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native"
+import MapView, { Marker, Region } from "react-native-maps"
+import HeaderModal from "../components/HeaderModal"
+import { WebSocketService } from "@/services/WebSocket"
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window")
 
 interface MarkerData {
-  id: string;
+  id: string
   coordinate: {
-    latitude: number;
-    longitude: number;
-  };
-  title: string;
+    latitude: number
+    longitude: number
+  }
+  title: string
 }
 
 export default function MainPage() {
-  const mapRef = useRef<MapView>(null);
+  useEffect(() => {
+    WebSocketService.connect()
+  }, [])
+
+  const mapRef = useRef<MapView>(null)
   const [markers, setMarkers] = useState<MarkerData[]>([
     {
-      id: '1',
+      id: "1",
       coordinate: {
         latitude: 55.7558,
         longitude: 37.6173,
       },
-      title: 'Москва',
+      title: "Москва",
     },
-  ]);
+  ])
 
   const [currentRegion, setCurrentRegion] = useState<Region>({
     latitude: 55.7558, // Москва
     longitude: 37.6173,
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
-  });
+  })
 
-  const [dragCoord, setDragCoord] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [isReady, setIsReady] = useState(false);
-  const [notifications] = useState(3);
-  const [userName] = useState('Пользователь');
+  const [dragCoord, setDragCoord] = useState<{
+    latitude: number
+    longitude: number
+  } | null>(null)
+  const [isReady, setIsReady] = useState(false)
+  const [notifications] = useState(3)
+  const [userName] = useState("Пользователь")
 
   const initialRegion: Region = {
     latitude: 55.7558, // Москва
     longitude: 37.6173,
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
-  };
+  }
 
   const handleMapPress = (event: any) => {
-    const { latitude, longitude } = event.nativeEvent.coordinate;
-    
+    const { latitude, longitude } = event.nativeEvent.coordinate
+
     const newMarker: MarkerData = {
       id: Date.now().toString(),
       coordinate: { latitude, longitude },
       title: `Маркер ${markers.length + 1}`,
-    };
-    
-    setMarkers([...markers, newMarker]);
-  };
+    }
+
+    setMarkers([...markers, newMarker])
+  }
 
   const handleMarkerPress = (marker: MarkerData) => {
     Alert.alert(
-      'Маркер',
-      `${marker.title}\nLat: ${marker.coordinate.latitude.toFixed(4)}\nLng: ${marker.coordinate.longitude.toFixed(4)}`,
+      "Маркер",
+      `${marker.title}\nLat: ${marker.coordinate.latitude.toFixed(
+        4
+      )}\nLng: ${marker.coordinate.longitude.toFixed(4)}`,
       [
         {
-          text: 'Удалить',
-          style: 'destructive',
+          text: "Удалить",
+          style: "destructive",
           onPress: () => {
-            setMarkers(markers.filter(m => m.id !== marker.id));
+            setMarkers(markers.filter((m) => m.id !== marker.id))
           },
         },
         {
-          text: 'Закрыть',
-          style: 'cancel',
+          text: "Закрыть",
+          style: "cancel",
         },
       ]
-    );
-  };
+    )
+  }
 
   const handleRegionChange = (region: Region) => {
-    setCurrentRegion(region);
-  };
+    setCurrentRegion(region)
+  }
 
   const zoomIn = () => {
     const newRegion = {
       ...currentRegion,
       latitudeDelta: currentRegion.latitudeDelta / 2,
       longitudeDelta: currentRegion.longitudeDelta / 2,
-    };
-    mapRef.current?.animateToRegion(newRegion, 300);
-  };
+    }
+    mapRef.current?.animateToRegion(newRegion, 300)
+  }
 
   const zoomOut = () => {
     const newRegion = {
       ...currentRegion,
       latitudeDelta: currentRegion.latitudeDelta * 2,
       longitudeDelta: currentRegion.longitudeDelta * 2,
-    };
-    mapRef.current?.animateToRegion(newRegion, 300);
-  };
+    }
+    mapRef.current?.animateToRegion(newRegion, 300)
+  }
 
   const handlePanDrag = (event: any) => {
-    const { coordinate } = event.nativeEvent;
-    setDragCoord(coordinate);
-  };
+    const { coordinate } = event.nativeEvent
+    setDragCoord(coordinate)
+  }
 
   const handleGetRoute = () => {
-    console.log('Получить маршрут');
-  };
+    console.log("Получить маршрут")
+  }
 
   const handleReadyToggle = () => {
-    setIsReady(!isReady);
-  };
+    setIsReady(!isReady)
+  }
 
   return (
     <View style={styles.container}>
@@ -161,7 +178,7 @@ export default function MainPage() {
         </TouchableOpacity>
       </View>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -173,21 +190,21 @@ const styles = StyleSheet.create({
     height: height,
   },
   zoomControls: {
-    position: 'absolute',
+    position: "absolute",
     right: 20,
-    top: '50%',
+    top: "50%",
     transform: [{ translateY: -50 }],
-    flexDirection: 'column',
+    flexDirection: "column",
   },
   zoomButton: {
     width: 50,
     height: 50,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginVertical: 5,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -198,7 +215,7 @@ const styles = StyleSheet.create({
   },
   zoomButtonText: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
-});
+})
