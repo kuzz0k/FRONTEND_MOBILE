@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit"
+import { API_BASE_URL, WS_URL } from "@/services/globals";
 
 export interface apiStateType {
   wsUrl: string;
@@ -6,8 +7,8 @@ export interface apiStateType {
 }
 
 const initialState: apiStateType = {
-  wsUrl: 'ws://192.168.31.50:8000/livestream/mog',
-  loginUrl: 'http://192.168.31.50:8000/'
+  wsUrl: WS_URL,
+  loginUrl: API_BASE_URL
 }
 
 export const apiSlice = createSlice({

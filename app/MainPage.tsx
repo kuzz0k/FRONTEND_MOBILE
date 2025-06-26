@@ -1,3 +1,4 @@
+import { WebSocketService } from "@/services/WebSocket"
 import React, { useEffect, useRef, useState } from "react"
 import {
   Alert,
@@ -9,7 +10,6 @@ import {
 } from "react-native"
 import MapView, { Marker, Region } from "react-native-maps"
 import HeaderModal from "../components/HeaderModal"
-import { WebSocketService } from "@/services/WebSocket"
 
 const { width, height } = Dimensions.get("window")
 

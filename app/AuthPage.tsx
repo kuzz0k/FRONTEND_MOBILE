@@ -1,25 +1,24 @@
 import { authSchema } from "@/constants/consts"
 import { useAppDispatch } from "@/hooks/redux"
-import { useLoginUserMutation } from "@/services/loginUser"
+import { useLoginMutation } from "@/services/auth"
 import { userSlice } from "@/store/reducers/authSlice"
 import { AuthType } from "@/types/types"
 import { zodResolver } from "@hookform/resolvers/zod"
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import React from "react"
 import { Controller, useForm } from "react-hook-form"
 import {
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native"
 
 const AuthPage: React.FC = () => {
   const dispatch = useAppDispatch()
-  const [loginUser] = useLoginUserMutation()
+  const [login] = useLoginMutation()
 
   const {
     control,
@@ -31,14 +30,15 @@ const AuthPage: React.FC = () => {
 
   const onSubmit = async (formData: AuthType) => {
     try {
-      await loginUser(formData).unwrap()
-      await AsyncStorage.setItem("authStatus", "ok")
+      const result = await login(formData).unwrap();
 
-      dispatch(userSlice.actions.login())
+      dispatch(userSlice.actions.login(result));
     } catch (err) {
-      console.error("Ошибка логина:", err)
+      console.error("Ошибка логина:", err);
+      //@ts-ignore
+      toast.error(`Ошибка авторизации. ${err.data.ошибка}`);
     }
-  }
+  };
 
   return (
     <KeyboardAvoidingView

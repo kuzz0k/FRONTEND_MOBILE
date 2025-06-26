@@ -1,11 +1,20 @@
-import { useAppSelector } from "@/hooks/redux"
+import { useAppDispatch, useAppSelector } from "@/hooks/redux"
 import { useFonts } from "expo-font"
 import { StatusBar } from "expo-status-bar"
 import "react-native-reanimated"
 import AuthPage from "./AuthPage"
 import MainPage from "./MainPage"
+import { userSlice } from "../store/reducers/authSlice";
+import { useCallback, useEffect, useState } from "react"
+import { useRefreshTokenMutation, useValidateTokenMutation } from "@/services/auth"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
 export default function RootLayout() {
+  const dispatch = useAppDispatch()
+  const [isLoading, setIsLoading] = useState(true)
+  const [validateToken] = useValidateTokenMutation()
+  const [refreshToken] = useRefreshTokenMutation()
+
   const [loaded] = useFonts({
     AnonymousPro: require("../assets/fonts/AnonymousPro-Regular.ttf"),
     AnonymousProBold: require("../assets/fonts/AnonymousPro-Bold.ttf"),
@@ -14,6 +23,63 @@ export default function RootLayout() {
   })
 
   const isAuth = useAppSelector((state) => state.user.isAuth)
+
+  const checkTokenValidity = useCallback(async () => {
+    try {
+      const accessToken = await AsyncStorage.getItem("accessToken")
+      const refreshTokenValue = await AsyncStorage.getItem("refreshToken")
+
+      if (!accessToken || !refreshTokenValue) {
+        return
+      }
+
+      const tokenValidationResult = await validateToken(accessToken)
+        .unwrap()
+        .catch((error) => {
+          return error
+        })
+
+      if (!tokenValidationResult?.status) {
+        dispatch(
+          userSlice.actions.login({
+            access_token: accessToken,
+            refresh_token: refreshTokenValue,
+            expires_in: 0,
+          })
+        )
+        return
+      }
+
+      if (tokenValidationResult?.status === 401) {
+        const refreshResult = await refreshToken({
+          refreshToken: refreshTokenValue,
+        })
+          .unwrap()
+          .catch((_) => {
+            return null
+          })
+
+        if (refreshResult) {
+          dispatch(
+            userSlice.actions.login({
+              access_token: refreshResult.access_token,
+              refresh_token: refreshResult.refresh_token,
+              expires_in: refreshResult.expires_in,
+            })
+          )
+          return
+        } else {
+        }
+      }
+    } catch (error) {
+    } finally {
+      setIsLoading(false)
+    }
+  }, [dispatch, validateToken, refreshToken])
+
+  useEffect(() => {
+    checkTokenValidity()
+  }, [checkTokenValidity])
 
   if (!loaded) return null
 

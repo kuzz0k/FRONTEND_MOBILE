@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit"
-import { api } from "../services/loginUser"
+import { api } from "../services/auth"
 import apiReducer from "./reducers/apiSlice"
 import appSettingsReducer from "./reducers/appSettingsSlice"
 import userReducer from "./reducers/authSlice"
@@ -13,10 +13,10 @@ export const store = configureStore({
     coordinates: coordinatesReducer,
     reperDot: reperDotReducer,
     appSettings: appSettingsReducer,
-    [api.reducerPath]: api.reducer, // RTK Query reducer
+    apiQuery: api.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(api.middleware), // RTK Query middleware
+    getDefaultMiddleware().concat(api.middleware),
 })
 
 export type RootState = ReturnType<typeof store.getState>

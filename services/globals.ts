@@ -1,13 +1,11 @@
-import { store } from "@/store/store";
+// Вместо импорта store, используем константы
+export const API_BASE_URL = "http://192.168.31.50:8000/";
+export const WS_URL = "ws://192.168.31.50:8000/livestream/mog";
 
 export const getUrl = () => {
-  const state = store.getState();
-
-  return state.api.wsUrl;
+  return WS_URL;
 }
 
 export const getLoginUrl = () => {
-  const state = store.getState();
-
-  return state.api.loginUrl;
+  return API_BASE_URL;
 }
