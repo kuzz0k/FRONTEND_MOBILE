@@ -7,13 +7,13 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import React from "react"
 import { Controller, useForm } from "react-hook-form"
 import {
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native"
 
 const AuthPage: React.FC = () => {

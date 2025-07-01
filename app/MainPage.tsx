@@ -1,3 +1,4 @@
+import { useAppSelector } from "@/hooks/redux"
 import { WebSocketService } from "@/services/WebSocket"
 import React, { useEffect, useRef, useState } from "react"
 import {
@@ -15,9 +16,12 @@ import CustomMapView from "../components/Map/CustomMapView"
 const { width, height } = Dimensions.get("window")
 
 export default function MainPage() {
+  const tokenState = useAppSelector(state => state.user.accessToken)
+  
   const { mapState, changeMapType } = useMap();
   
   useEffect(() => {
+    WebSocketService.updateToken(tokenState!);
     WebSocketService.connect()
   }, [])
 
