@@ -5,14 +5,18 @@ type MessageHandler = (message: MessageEvent) => void;
 class WebSocketAuth {
   private WS_URL: string = getUrl();
   private socket: WebSocket | null = null;
-  private reconnectInterval = 5000;
+  private reconnectInterval = 7000;
   private shouldReconnect: boolean = true;
   private messageHandler: MessageHandler | null = null;
   private maxReconnectAttempts: number = 5;
   private currentReconnectAttempts: number = 0;
   private isConnecting: boolean = false;
   private reconnectTimeout: NodeJS.Timeout | null = null;
+  private accessToken: string | null = null;
 
+  updateToken(token: string) {
+    this.accessToken = token;
+  }
 
   get isConnected(): boolean {
     return this.socket?.readyState === WebSocket.OPEN;
@@ -28,7 +32,7 @@ class WebSocketAuth {
     this.cleanupSocket();
 
     try {
-      this.socket = new WebSocket(`${this.WS_URL}?token=mobilkabarsik`);
+      this.socket = new WebSocket(`${this.WS_URL}?token=Bearer ${this.accessToken}`);
 
       this.socket.onopen = () => {
         console.log("Соединение с сервером установлено");

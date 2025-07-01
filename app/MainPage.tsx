@@ -1,3 +1,4 @@
+import { useAppSelector } from "@/hooks/redux"
 import { WebSocketService } from "@/services/WebSocket"
 import React, { useEffect, useRef, useState } from "react"
 import {
@@ -23,7 +24,10 @@ interface MarkerData {
 }
 
 export default function MainPage() {
+  const tokenState = useAppSelector(state => state.user.accessToken)
+  
   useEffect(() => {
+    WebSocketService.updateToken(tokenState!);
     WebSocketService.connect()
   }, [])
 

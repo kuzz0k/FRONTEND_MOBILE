@@ -1,13 +1,13 @@
 import { useAppDispatch, useAppSelector } from "@/hooks/redux"
-import { useFonts } from "expo-font"
-import { StatusBar } from "expo-status-bar"
-import "react-native-reanimated"
-import AuthPage from "./AuthPage"
-import MainPage from "./MainPage"
-import { userSlice } from "../store/reducers/authSlice";
-import { useCallback, useEffect, useState } from "react"
 import { useRefreshTokenMutation, useValidateTokenMutation } from "@/services/auth"
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import { useFonts } from "expo-font"
+import { StatusBar } from "expo-status-bar"
+import { useCallback, useEffect, useState } from "react"
+import "react-native-reanimated"
+import { userSlice } from "../store/reducers/authSlice"
+import AuthPage from "./AuthPage"
+import MainPage from "./MainPage"
 
 export default function RootLayout() {
   const dispatch = useAppDispatch()
