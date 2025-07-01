@@ -5,6 +5,7 @@ import appSettingsReducer from "./reducers/appSettingsSlice"
 import userReducer from "./reducers/authSlice"
 import coordinatesReducer from "./reducers/coordinatesSlice"
 import reperDotReducer from "./reducers/reperDotSlice"
+import mapReducer from "./reducers/mapSlice"
 
 export const store = configureStore({
   reducer: {
@@ -13,6 +14,7 @@ export const store = configureStore({
     coordinates: coordinatesReducer,
     reperDot: reperDotReducer,
     appSettings: appSettingsReducer,
+    map: mapReducer,
     apiQuery: api.reducer,
   },
   middleware: (getDefaultMiddleware) =>

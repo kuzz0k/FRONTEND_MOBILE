@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather'; // or appropriate icon library
+import { MAP_LABELS } from '../constants/consts';
 
 const { width } = Dimensions.get('window');
 
@@ -13,6 +14,9 @@ interface HeaderModalProps {
   isReady: boolean;
   notifications: number;
   userName: string;
+  mapType: 'hybrid' | 'standard' | 'satellite';
+  onMapTypeChange: (mapType: 'hybrid' | 'standard' | 'satellite') => void;
+  onMapSettingsToggle?: (isOpen: boolean) => void;
 }
 
 /**
@@ -26,6 +30,8 @@ interface HeaderModalProps {
  *  - isReady: boolean
  *  - notifications: number
  *  - userName: string
+ *  - mapType: 'hybrid' | 'standard' | 'satellite'
+ *  - onMapTypeChange: (mapType: 'hybrid' | 'standard' | 'satellite') => void
  */
 export default function HeaderModal({
   isVisible,
@@ -36,12 +42,31 @@ export default function HeaderModal({
   isReady,
   notifications,
   userName,
+  mapType,
+  onMapTypeChange,
+  onMapSettingsToggle,
 }: HeaderModalProps) {
+  const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false);
+  
   const formatCoords = (lat: number, lon: number) => `Ш: ${lat.toFixed(6)}  Д: ${lon.toFixed(6)}`;
   const formatTime = (date: Date | string) => {
     const d = new Date(date);
     const pad = (n: number) => (n < 10 ? '0' + n : n);
     return `${pad(d.getHours())}:${pad(d.getMinutes())} ${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear().toString().slice(-2)}`;
+  };
+
+  const mapTypeLabels = MAP_LABELS;
+
+  const handleMapTypeSelect = (selectedMapType: 'hybrid' | 'standard' | 'satellite') => {
+    onMapTypeChange(selectedMapType);
+    setIsMapSettingsOpen(false);
+    onMapSettingsToggle?.(false);
+  };
+
+  const toggleMapSettings = () => {
+    const newState = !isMapSettingsOpen;
+    setIsMapSettingsOpen(newState);
+    onMapSettingsToggle?.(newState);
   };
 
   return isVisible ? (
@@ -66,6 +91,13 @@ export default function HeaderModal({
             <Text style={styles.statusText}>{isReady ? 'Готов' : 'Не готов'}</Text>
           </TouchableOpacity>
 
+          <TouchableOpacity 
+            style={styles.mapSettingsButton} 
+            onPress={toggleMapSettings}
+          >
+            <Icon name="map" size={20} color="#333" />
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.notificationButton}>
             <Icon name="message-circle" size={20} color="#333" />
             {notifications > 0 && (
@@ -81,6 +113,34 @@ export default function HeaderModal({
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Выпадающее меню настроек карты */}
+      {isMapSettingsOpen && (
+        <View 
+          style={styles.mapSettingsDropdown}
+        >
+          {Object.entries(mapTypeLabels).map(([type, label]) => (
+            <TouchableOpacity
+              key={type}
+              style={[
+                styles.mapTypeOption,
+                mapType === type && styles.mapTypeOptionSelected
+              ]}
+              onPress={() => handleMapTypeSelect(type as 'hybrid' | 'standard' | 'satellite')}
+            >
+              <Text style={[
+                styles.mapTypeText,
+                mapType === type && styles.mapTypeTextSelected
+              ]}>
+                {label}
+              </Text>
+              {mapType === type && (
+                <Icon name="check" size={16} color="#4CAF50" />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
     </View>
   ) : null;
 }
@@ -144,6 +204,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#333',
   },
+  mapSettingsButton: {
+    marginRight: 12,
+  },
   notificationButton: {
     marginRight: 12,
   },
@@ -169,5 +232,37 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     fontSize: 12,
     color: '#333',
+  },
+  mapSettingsDropdown: {
+    position: 'absolute',
+    top: 60,
+    right: 80,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    paddingVertical: 8,
+    minWidth: 120,
+  },
+  mapTypeOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  mapTypeOptionSelected: {
+    backgroundColor: '#f0f0f0',
+  },
+  mapTypeText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  mapTypeTextSelected: {
+    color: '#4CAF50',
+    fontWeight: '500',
   },
 });
