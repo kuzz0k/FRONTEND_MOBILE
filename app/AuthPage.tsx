@@ -4,7 +4,7 @@ import { useLoginMutation } from "@/services/auth"
 import { userSlice } from "@/store/reducers/authSlice"
 import { AuthType } from "@/types/types"
 import { zodResolver } from "@hookform/resolvers/zod"
-import React from "react"
+import React, { useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import {
   KeyboardAvoidingView,
@@ -19,6 +19,7 @@ import {
 const AuthPage: React.FC = () => {
   const dispatch = useAppDispatch()
   const [login] = useLoginMutation()
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const {
     control,
@@ -31,10 +32,12 @@ const AuthPage: React.FC = () => {
   const onSubmit = async (formData: AuthType) => {
     try {
       const result = await login(formData).unwrap();
+      setIsLoading(true);
 
       dispatch(userSlice.actions.login(result));
     } catch (err) {
       console.error("Ошибка логина:", err);
+      setIsLoading(false);
       //@ts-ignore
       toast.error(`Ошибка авторизации. ${err.data.ошибка}`);
     }
@@ -88,8 +91,9 @@ const AuthPage: React.FC = () => {
         <TouchableOpacity
           style={styles.button}
           onPress={handleSubmit(onSubmit)}
+          disabled={isLoading}
         >
-          <Text style={styles.buttonText}>Войти</Text>
+          <Text style={styles.buttonText}>{isLoading ? "Входим..." : "Войти"}</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

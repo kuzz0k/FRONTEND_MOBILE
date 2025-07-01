@@ -9,11 +9,17 @@ import { userSlice } from "../store/reducers/authSlice"
 import AuthPage from "./AuthPage"
 import MainPage from "./MainPage"
 
+import * as ScreenOrientation from "expo-screen-orientation"
+
 export default function RootLayout() {
   const dispatch = useAppDispatch()
   const [isLoading, setIsLoading] = useState(true)
   const [validateToken] = useValidateTokenMutation()
   const [refreshToken] = useRefreshTokenMutation()
+
+  useEffect(() => {
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT);
+  }, []);
 
   const [loaded] = useFonts({
     AnonymousPro: require("../assets/fonts/AnonymousPro-Regular.ttf"),

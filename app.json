@@ -7,7 +7,8 @@
     "icon": "./assets/images/icon.png",
     "scheme": "frontendmobile",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,    "ios": {
+    "newArchEnabled": true,
+    "ios": {
       "supportsTablet": true,
       "config": {
         "googleMapsApiKey": "YOUR_IOS_API_KEY"
@@ -27,7 +28,8 @@
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
-      ]
+      ],
+      "package": "com.wqbalance.FRONTEND_MOBILE"
     },
     "web": {
       "bundler": "metro",
@@ -44,10 +46,22 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "LANDSCAPE_RIGHT"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7b21fd08-80f5-49d1-89dd-597f8b6cf3ff"
+      }
     }
   }
 }
