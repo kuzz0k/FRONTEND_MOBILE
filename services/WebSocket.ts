@@ -11,7 +11,7 @@ class WebSocketAuth {
   private maxReconnectAttempts: number = 5;
   private currentReconnectAttempts: number = 0;
   private isConnecting: boolean = false;
-  private reconnectTimeout: NodeJS.Timeout | null = null;
+  private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private accessToken: string | null = null;
 
   updateToken(token: string) {
@@ -32,7 +32,8 @@ class WebSocketAuth {
     this.cleanupSocket();
 
     try {
-      this.socket = new WebSocket(`${this.WS_URL}?token=Bearer ${this.accessToken}`);
+      const encodedToken = encodeURIComponent(`Bearer ${this.accessToken}`);
+      this.socket = new WebSocket(`${this.WS_URL}?token=${encodedToken}`);
 
       this.socket.onopen = () => {
         console.log("Соединение с сервером установлено");
