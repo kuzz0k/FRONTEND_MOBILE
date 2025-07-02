@@ -4,8 +4,8 @@ import apiReducer from "./reducers/apiSlice"
 import appSettingsReducer from "./reducers/appSettingsSlice"
 import userReducer from "./reducers/authSlice"
 import coordinatesReducer from "./reducers/coordinatesSlice"
-import reperDotReducer from "./reducers/reperDotSlice"
 import mapReducer from "./reducers/mapSlice"
+import reperDotReducer from "./reducers/reperDotSlice"
 import userLocationReducer from "./reducers/userLocationSlice"
 
 export const store = configureStore({

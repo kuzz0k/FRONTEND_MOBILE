@@ -1,9 +1,10 @@
 import React from 'react';
-import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import { StyleSheet, View } from 'react-native';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../store/store';
 import { MapType } from '../../constants/consts';
+import { RootState } from '../../store/store';
+import UserLocationMarker from './UserLocationMarker';
 
 interface CustomMapViewProps {
   style?: any;
@@ -27,6 +28,7 @@ export default function CustomMapView({
   mapRef,
 }: CustomMapViewProps) {
   const { mapType, region } = useSelector((state: RootState) => state.map);
+  const userLocation = useSelector((state: RootState) => state.userLocation);
 
   // Для react-native-maps мы можем использовать кастомные тайлы только с UrlTile
   // Но это работает только на Android, для iOS нужно использовать встроенные типы
@@ -76,6 +78,26 @@ export default function CustomMapView({
           />
         )}
         */}
+        
+        {/* Маркер текущего местоложения пользователя */}
+        {userLocation.isTracking && userLocation.latitude && userLocation.longitude && (
+          <Marker
+            coordinate={{
+              latitude: userLocation.latitude,
+              longitude: userLocation.longitude,
+            }}
+            title="Мое местоположение"
+            description={`Обновлено: ${new Date(userLocation.timestamp).toLocaleTimeString()}`}
+            identifier="user-location"
+            anchor={{ x: 0.5, y: 0.5 }}
+          >
+            <UserLocationMarker 
+              size={15} 
+              isActive={userLocation.isTracking} 
+            />
+          </Marker>
+        )}
+        
         {children}
       </MapView>
     </View>

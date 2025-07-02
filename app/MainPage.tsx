@@ -1,4 +1,4 @@
-import { useAppSelector, useAppDispatch } from "@/hooks/redux"
+import { useAppDispatch, useAppSelector } from "@/hooks/redux"
 import { WebSocketService } from "@/services/WebSocket"
 import React, { useEffect, useRef, useState } from "react"
 import {
@@ -9,19 +9,20 @@ import {
   View,
 } from "react-native"
 import MapView, { Region } from "react-native-maps"
+import CenterOnUserButton from "../components/CenterOnUserButton"
 import HeaderModal from "../components/HeaderModal"
-import { useMap } from "../hooks/useMap"
-import { useLocationService } from "../hooks/useLocationService"
-import { updateCoordinates } from "../store/reducers/coordinatesSlice"
 import CustomMapView from "../components/Map/CustomMapView"
-import LocationDebugPanel from "../components/LocationDebugPanel"
-import WebSocketDebugPanel from "../components/WebSocketDebugPanel"
+import { useLocationService } from "../hooks/useLocationService"
+import { useMap } from "../hooks/useMap"
+import { updateCoordinates } from "../store/reducers/coordinatesSlice"
+import WebSocketDebugPanel from "@/components/WebSocketDebugPanel"
 
 const { width, height } = Dimensions.get("window")
 
 export default function MainPage() {
   const tokenState = useAppSelector(state => state.user.accessToken)
   const coordinates = useAppSelector(state => state.coordinates) // Координаты точки на экране
+  const userLocation = useAppSelector(state => state.userLocation) // Координаты пользователя
   const dispatch = useAppDispatch()
   
   const { mapState, changeMapType } = useMap();
@@ -101,6 +102,18 @@ export default function MainPage() {
     mapRef.current?.animateToRegion(newRegion, 300)
   }
 
+  const centerOnUser = () => {
+    if (userLocation.latitude && userLocation.longitude) {
+      const newRegion = {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        latitudeDelta: 0.01, // Приближенный зум
+        longitudeDelta: 0.01,
+      }
+      mapRef.current?.animateToRegion(newRegion, 500)
+    }
+  }
+
   return (
     <View style={styles.container}>
       <HeaderModal
@@ -142,8 +155,13 @@ export default function MainPage() {
         </TouchableOpacity>
       </View>
 
-      {/* Панель отладки геолокации */}
-      <LocationDebugPanel />
+      {/* Кнопка центрирования на пользователе */}
+      <View style={styles.centerOnUserContainer}>
+        <CenterOnUserButton 
+          onPress={centerOnUser}
+          isLocationAvailable={userLocation.isTracking && !!userLocation.latitude}
+        />
+      </View>
 
       {/* Панель отладки WebSocket */}
       <WebSocketDebugPanel />
@@ -187,5 +205,10 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "#333",
+  },
+  centerOnUserContainer: {
+    position: "absolute",
+    right: 20,
+    bottom: 200,
   },
 })

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { LocationData, locationService } from '../services/LocationService';
 import { RootState } from '../store/store';
-import { locationService, LocationData } from '../services/LocationService';
 
 export const useLocationService = () => {
   const userLocation = useSelector((state: RootState) => state.userLocation);

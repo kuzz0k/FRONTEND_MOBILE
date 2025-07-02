@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { WebSocketService } from '../services/WebSocket';
 
 interface WebSocketMessage {
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   container: {
     position: 'absolute',
     top: 100,
-    right: 20,
+    left: 20,
     width: 300,
     height: 400,
     backgroundColor: 'rgba(0, 0, 0, 0.8)',

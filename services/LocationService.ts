@@ -1,8 +1,8 @@
 import * as Location from 'expo-location';
-import { WebSocketService } from './WebSocket';
+import { setLocationError, setTrackingStatus, updateUserLocation } from '../store/reducers/userLocationSlice';
 import { store } from '../store/store';
-import { updateUserLocation, setTrackingStatus, setLocationError } from '../store/reducers/userLocationSlice';
 import { MogUpdated, TOPICS_MOGS } from '../types/types';
+import { WebSocketService } from './WebSocket';
 
 export interface LocationData {
   latitude: number;
