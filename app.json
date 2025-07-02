@@ -12,6 +12,10 @@
       "supportsTablet": true,
       "config": {
         "googleMapsApiKey": "YOUR_IOS_API_KEY"
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Это приложение использует геолокацию для отправки местоположения каждые 5 секунд.",
+        "NSLocationAlwaysUsageDescription": "Это приложение использует геолокацию для отправки местоположения каждые 5 секунд."
       }
     },
     "android": {
@@ -38,6 +42,12 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Это приложение использует геолокацию для отправки местоположения каждые 5 секунд."
+        }
+      ],
       [
         "expo-splash-screen",
         {

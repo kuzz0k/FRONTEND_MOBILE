@@ -17,6 +17,8 @@ interface HeaderModalProps {
   mapType: 'hybrid' | 'standard' | 'satellite';
   onMapTypeChange: (mapType: 'hybrid' | 'standard' | 'satellite') => void;
   onMapSettingsToggle?: (isOpen: boolean) => void;
+  isLocationServiceRunning?: boolean;
+  locationError?: string | null;
 }
 
 /**
@@ -45,6 +47,8 @@ export default function HeaderModal({
   mapType,
   onMapTypeChange,
   onMapSettingsToggle,
+  isLocationServiceRunning = false,
+  locationError,
 }: HeaderModalProps) {
   const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false);
   
@@ -73,8 +77,22 @@ export default function HeaderModal({
     <View style={styles.modalContainer} pointerEvents="box-none">
       <View style={styles.container}>
         <View style={styles.coordsBlock}>
-          <Text style={styles.coordsText}>{formatCoords(coords.latitude, coords.longitude)}</Text>
+          <View style={styles.coordsRow}>
+            <Text style={styles.coordsText}>{formatCoords(coords.latitude, coords.longitude)}</Text>
+            <View style={styles.locationStatusContainer}>
+              <View style={[
+                styles.locationStatusIndicator,
+                { backgroundColor: isLocationServiceRunning ? '#4CAF50' : '#f44336' }
+              ]} />
+              <Text style={styles.locationStatusText}>
+                {isLocationServiceRunning ? 'GPS' : 'OFFLINE'}
+              </Text>
+            </View>
+          </View>
           <Text style={styles.timeText}>{formatTime(timestamp)}</Text>
+          {locationError && (
+            <Text style={styles.errorText}>{locationError}</Text>
+          )}
         </View>
 
         <TouchableOpacity style={styles.routeButton} onPress={onGetRoute}>
@@ -264,5 +282,30 @@ const styles = StyleSheet.create({
   mapTypeTextSelected: {
     color: '#4CAF50',
     fontWeight: '500',
+  },
+  coordsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  locationStatusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  locationStatusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 4,
+  },
+  locationStatusText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  errorText: {
+    fontSize: 10,
+    color: '#f44336',
+    marginTop: 2,
   },
 });

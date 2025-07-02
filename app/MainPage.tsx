@@ -1,4 +1,4 @@
-import { useAppSelector } from "@/hooks/redux"
+import { useAppSelector, useAppDispatch } from "@/hooks/redux"
 import { WebSocketService } from "@/services/WebSocket"
 import React, { useEffect, useRef, useState } from "react"
 import {
@@ -11,19 +11,31 @@ import {
 import MapView, { Region } from "react-native-maps"
 import HeaderModal from "../components/HeaderModal"
 import { useMap } from "../hooks/useMap"
+import { useLocationService } from "../hooks/useLocationService"
+import { updateCoordinates } from "../store/reducers/coordinatesSlice"
 import CustomMapView from "../components/Map/CustomMapView"
+import LocationDebugPanel from "../components/LocationDebugPanel"
+import WebSocketDebugPanel from "../components/WebSocketDebugPanel"
 
 const { width, height } = Dimensions.get("window")
 
 export default function MainPage() {
   const tokenState = useAppSelector(state => state.user.accessToken)
+  const coordinates = useAppSelector(state => state.coordinates) // Координаты точки на экране
+  const dispatch = useAppDispatch()
   
   const { mapState, changeMapType } = useMap();
+  const { 
+    isLocationServiceRunning, 
+    locationError
+  } = useLocationService();
   
   useEffect(() => {
-    WebSocketService.updateToken(tokenState!);
-    WebSocketService.connect()
-  }, [])
+    if (tokenState) {
+      WebSocketService.updateToken(tokenState);
+      WebSocketService.connect();
+    }
+  }, [tokenState])
 
   const mapRef = useRef<MapView>(null)
 
@@ -39,7 +51,16 @@ export default function MainPage() {
   const [userName] = useState("Пользователь")
   const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false)
 
-  const handleMapPress = () => {
+  const handleMapPress = (event: any) => {
+    // Обновляем координаты точки на экране при нажатии на карту
+    if (event.nativeEvent && event.nativeEvent.coordinate) {
+      const { latitude, longitude } = event.nativeEvent.coordinate;
+      dispatch(updateCoordinates({
+        lat: latitude,
+        lng: longitude
+      }));
+    }
+    
     // Закрываем меню настроек карты при нажатии на карту
     if (isMapSettingsOpen) {
       setIsMapSettingsOpen(false);
@@ -84,7 +105,10 @@ export default function MainPage() {
     <View style={styles.container}>
       <HeaderModal
         isVisible={true}
-        coords={currentRegion}
+        coords={{
+          latitude: coordinates.lat,
+          longitude: coordinates.lng
+        }}
         timestamp={new Date()}
         onGetRoute={handleGetRoute}
         onReadyToggle={handleReadyToggle}
@@ -94,6 +118,8 @@ export default function MainPage() {
         mapType={mapState.mapType}
         onMapTypeChange={changeMapType}
         onMapSettingsToggle={handleMapSettingsToggle}
+        isLocationServiceRunning={isLocationServiceRunning}
+        locationError={locationError}
       />
 
       <CustomMapView
@@ -115,6 +141,12 @@ export default function MainPage() {
           <Text style={styles.zoomButtonText}>-</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Панель отладки геолокации */}
+      <LocationDebugPanel />
+
+      {/* Панель отладки WebSocket */}
+      <WebSocketDebugPanel />
     </View>
   )
 }
