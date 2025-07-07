@@ -4,23 +4,24 @@ import React, { useEffect, useRef, useState } from "react"
 import {
   Dimensions,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
 } from "react-native"
 import MapView, { Region } from "react-native-maps"
 import CenterOnUserButton from "../components/CenterOnUserButton"
 import HeaderModal from "../components/HeaderModal"
 import CustomMapView from "../components/Map/CustomMapView"
+import ZoomControls from "../components/ui/ZoomControls"
 import { useLocationService } from "../hooks/useLocationService"
 import { useMap } from "../hooks/useMap"
+import { locationService } from "../services/LocationService"
+import { toggleReady } from "../store/reducers/authSlice"
 import { updateCoordinates } from "../store/reducers/coordinatesSlice"
-import WebSocketDebugPanel from "@/components/WebSocketDebugPanel"
 
 const { width, height } = Dimensions.get("window")
 
 export default function MainPage() {
   const tokenState = useAppSelector(state => state.user.accessToken)
+  const isReady = useAppSelector(state => state.user.isReady) // Берем из Redux
   const coordinates = useAppSelector(state => state.coordinates) // Координаты точки на экране
   const userLocation = useAppSelector(state => state.userLocation) // Координаты пользователя
   const dispatch = useAppDispatch()
@@ -47,7 +48,6 @@ export default function MainPage() {
     longitudeDelta: 0.0421,
   })
 
-  const [isReady, setIsReady] = useState(false)
   const [notifications] = useState(3)
   const [userName] = useState("Пользователь")
   const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false)
@@ -76,8 +76,10 @@ export default function MainPage() {
     console.log("Получить маршрут")
   }
 
-  const handleReadyToggle = () => {
-    setIsReady(!isReady)
+  const handleReadyToggle = async () => {
+    dispatch(toggleReady())
+    // Отправляем обновление статуса готовности в WebSocket
+    await locationService.sendReadyStatusUpdate()
   }
 
   const handleMapSettingsToggle = (isOpen: boolean) => {
@@ -145,15 +147,8 @@ export default function MainPage() {
       >
       </CustomMapView>
 
-      {/* Кнопки зума по центру справа */}
-      <View style={styles.zoomControls}>
-        <TouchableOpacity style={styles.zoomButton} onPress={zoomIn}>
-          <Text style={styles.zoomButtonText}>+</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.zoomButton} onPress={zoomOut}>
-          <Text style={styles.zoomButtonText}>-</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Кнопки зума */}
+      <ZoomControls onZoomIn={zoomIn} onZoomOut={zoomOut} />
 
       {/* Кнопка центрирования на пользователе */}
       <View style={styles.centerOnUserContainer}>
@@ -162,9 +157,6 @@ export default function MainPage() {
           isLocationAvailable={userLocation.isTracking && !!userLocation.latitude}
         />
       </View>
-
-      {/* Панель отладки WebSocket */}
-      <WebSocketDebugPanel />
     </View>
   )
 }
@@ -176,35 +168,6 @@ const styles = StyleSheet.create({
   map: {
     width: width,
     height: height,
-  },
-  zoomControls: {
-    position: "absolute",
-    right: 20,
-    top: "50%",
-    transform: [{ translateY: -50 }],
-    flexDirection: "column",
-  },
-  zoomButton: {
-    width: 50,
-    height: 50,
-    backgroundColor: "white",
-    borderRadius: 25,
-    justifyContent: "center",
-    alignItems: "center",
-    marginVertical: 5,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  zoomButtonText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
   },
   centerOnUserContainer: {
     position: "absolute",

@@ -34,6 +34,8 @@ export default function RootLayout() {
     try {
       const accessToken = await AsyncStorage.getItem("accessToken")
       const refreshTokenValue = await AsyncStorage.getItem("refreshToken")
+      const storedUsername = await AsyncStorage.getItem("username")
+      const storedCallSign = await AsyncStorage.getItem("callSign")
 
       if (!accessToken || !refreshTokenValue) {
         return
@@ -51,6 +53,8 @@ export default function RootLayout() {
             access_token: accessToken,
             refresh_token: refreshTokenValue,
             expires_in: 0,
+            username: storedUsername || "mobile_user", // Берем из AsyncStorage
+            callSign: storedCallSign || undefined,
           })
         )
         return
@@ -71,13 +75,16 @@ export default function RootLayout() {
               access_token: refreshResult.access_token,
               refresh_token: refreshResult.refresh_token,
               expires_in: refreshResult.expires_in,
+              username: storedUsername || "mobile_user",
+              callSign: storedCallSign || undefined,
             })
           )
           return
         } else {
         }
       }
-    } catch (error) {
+    } catch {
+      // Игнорируем ошибки валидации токена
     } finally {
       setIsLoading(false)
     }
@@ -87,7 +94,7 @@ export default function RootLayout() {
     checkTokenValidity()
   }, [checkTokenValidity])
 
-  if (!loaded) return null
+  if (!loaded || isLoading) return null
 
   return (
     <>
