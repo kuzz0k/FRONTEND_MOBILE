@@ -3,7 +3,7 @@ import { authSchema } from "@/constants/consts"
 import { useAppDispatch } from "@/hooks/redux"
 import { useLoginMutation } from "@/services/auth"
 import { userSlice } from "@/store/reducers/authSlice"
-import { AuthType } from "@/types/types"
+import { AuthType, LoginRequest } from "@/types/types"
 import { zodResolver } from "@hookform/resolvers/zod"
 import React, { useState } from "react"
 import { useForm } from "react-hook-form"
@@ -28,10 +28,20 @@ const AuthPage: React.FC = () => {
 
   const onSubmit = async (formData: AuthType) => {
     try {
-      const result = await login(formData).unwrap();
+      // Отправляем на сервер только username и password
+      const loginRequest: LoginRequest = {
+        username: formData.username,
+        password: formData.password
+      };
+      const result = await login(loginRequest).unwrap();
       setIsLoading(true);
 
-      dispatch(userSlice.actions.login({...result, username: formData.username}));
+      // Сохраняем в Redux все данные включая callSign
+      dispatch(userSlice.actions.login({
+        ...result, 
+        username: formData.username,
+        callSign: formData.callSign // Обязательное поле, всегда есть
+      }));
     } catch (err) {
       console.error("Ошибка логина:", err);
       setIsLoading(false);

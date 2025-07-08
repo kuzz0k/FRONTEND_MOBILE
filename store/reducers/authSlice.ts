@@ -26,7 +26,7 @@ interface LoginPayload {
   refresh_token: string
   expires_in: number
   username: string
-  callSign?: string
+  callSign: string
 }
 
 export const userSlice = createSlice({
@@ -36,15 +36,13 @@ export const userSlice = createSlice({
     login: (state, actions: PayloadAction<LoginPayload>) => {
       state.isAuth = true
       state.username = actions.payload.username
-      state.callSign = actions.payload.callSign || null
+      state.callSign = actions.payload.callSign
       state.accessToken = actions.payload.access_token
       state.refreshToken = actions.payload.refresh_token
       AsyncStorage.setItem("accessToken", actions.payload.access_token)
       AsyncStorage.setItem("refreshToken", actions.payload.refresh_token)
       AsyncStorage.setItem("username", actions.payload.username)
-      if (actions.payload.callSign) {
-        AsyncStorage.setItem("callSign", actions.payload.callSign)
-      }
+      AsyncStorage.setItem("callSign", actions.payload.callSign)
     },
     logout: (state) => {
       state.isAuth = false

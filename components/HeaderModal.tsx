@@ -17,6 +17,7 @@ interface HeaderModalProps {
   mapType: 'hybrid' | 'standard' | 'satellite';
   onMapTypeChange: (mapType: 'hybrid' | 'standard' | 'satellite') => void;
   onMapSettingsToggle?: (isOpen: boolean) => void;
+  onLogout?: () => void;
   isLocationServiceRunning?: boolean;
   locationError?: string | null;
 }
@@ -47,10 +48,12 @@ export default function HeaderModal({
   mapType,
   onMapTypeChange,
   onMapSettingsToggle,
+  onLogout,
   isLocationServiceRunning = false,
   locationError,
 }: HeaderModalProps) {
   const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   
   const formatCoords = (lat: number, lon: number) => `Ш: ${lat.toFixed(6)}  Д: ${lon.toFixed(6)}`;
   const formatTime = (date: Date | string) => {
@@ -71,6 +74,11 @@ export default function HeaderModal({
     const newState = !isMapSettingsOpen;
     setIsMapSettingsOpen(newState);
     onMapSettingsToggle?.(newState);
+  };
+
+  const toggleUserMenu = () => {
+    const newState = !isUserMenuOpen;
+    setIsUserMenuOpen(newState);
   };
 
   return isVisible ? (
@@ -125,7 +133,7 @@ export default function HeaderModal({
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.userButton}>
+          <TouchableOpacity style={styles.userButton} onPress={toggleUserMenu}>
             <Icon name="user" size={20} color="#333" />
             <Text style={styles.userText}>{userName}</Text>
           </TouchableOpacity>
@@ -157,6 +165,24 @@ export default function HeaderModal({
               )}
             </TouchableOpacity>
           ))}
+        </View>
+      )}
+
+      {/* Выпадающее меню пользователя */}
+      {isUserMenuOpen && (
+        <View 
+          style={styles.userMenuDropdown}
+        >
+          <TouchableOpacity
+            style={styles.userMenuOption}
+            onPress={() => {
+              onLogout?.();
+              setIsUserMenuOpen(false);
+            }}
+          >
+            <Icon name="log-out" size={16} color="#f44336" />
+            <Text style={styles.userMenuText}>Выйти</Text>
+          </TouchableOpacity>
         </View>
       )}
     </View>
@@ -307,5 +333,30 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#f44336',
     marginTop: 2,
+  },
+  userMenuDropdown: {
+    position: 'absolute',
+    top: 60,
+    right: 12,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    paddingVertical: 8,
+    minWidth: 120,
+  },
+  userMenuOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  userMenuText: {
+    fontSize: 14,
+    color: '#f44336',
+    marginLeft: 8,
   },
 });

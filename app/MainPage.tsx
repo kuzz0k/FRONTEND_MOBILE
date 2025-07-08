@@ -1,4 +1,5 @@
 import { useAppDispatch, useAppSelector } from "@/hooks/redux"
+import { useLogoutMutation } from "@/services/auth"
 import { WebSocketService } from "@/services/WebSocket"
 import React, { useEffect, useRef, useState } from "react"
 import {
@@ -14,7 +15,7 @@ import ZoomControls from "../components/ui/ZoomControls"
 import { useLocationService } from "../hooks/useLocationService"
 import { useMap } from "../hooks/useMap"
 import { locationService } from "../services/LocationService"
-import { toggleReady } from "../store/reducers/authSlice"
+import { logout, toggleReady } from "../store/reducers/authSlice"
 import { updateCoordinates } from "../store/reducers/coordinatesSlice"
 
 const { width, height } = Dimensions.get("window")
@@ -22,9 +23,11 @@ const { width, height } = Dimensions.get("window")
 export default function MainPage() {
   const tokenState = useAppSelector(state => state.user.accessToken)
   const isReady = useAppSelector(state => state.user.isReady) // Берем из Redux
+  const userCallSign = useAppSelector(state => state.user.callSign) // Берем позывной из Redux
   const coordinates = useAppSelector(state => state.coordinates) // Координаты точки на экране
   const userLocation = useAppSelector(state => state.userLocation) // Координаты пользователя
   const dispatch = useAppDispatch()
+  const [logoutMutation] = useLogoutMutation()
   
   const { mapState, changeMapType } = useMap();
   const { 
@@ -49,7 +52,6 @@ export default function MainPage() {
   })
 
   const [notifications] = useState(3)
-  const [userName] = useState("Пользователь")
   const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false)
 
   const handleMapPress = (event: any) => {
@@ -84,6 +86,23 @@ export default function MainPage() {
 
   const handleMapSettingsToggle = (isOpen: boolean) => {
     setIsMapSettingsOpen(isOpen)
+  }
+
+  const handleLogout = async () => {
+    try {
+      if (tokenState) {
+        await logoutMutation(tokenState).unwrap()
+      }
+      dispatch(logout())
+      WebSocketService.disconnect()
+      locationService.stopLocationUpdates()
+    } catch (error) {
+      console.error('Ошибка при выходе:', error)
+      // Даже если запрос logout failed, очищаем локальное состояние
+      dispatch(logout())
+      WebSocketService.disconnect()
+      locationService.stopLocationUpdates()
+    }
   }
 
   const zoomIn = () => {
@@ -129,10 +148,11 @@ export default function MainPage() {
         onReadyToggle={handleReadyToggle}
         isReady={isReady}
         notifications={notifications}
-        userName={userName}
+        userName={userCallSign || "Позывной"}
         mapType={mapState.mapType}
         onMapTypeChange={changeMapType}
         onMapSettingsToggle={handleMapSettingsToggle}
+        onLogout={handleLogout}
         isLocationServiceRunning={isLocationServiceRunning}
         locationError={locationError}
       />

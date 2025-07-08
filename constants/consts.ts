@@ -42,5 +42,8 @@ export const MAP_LABELS: Record<MapType, string> = {
 
 export const authSchema = z.object({
     username: z.string().min(1,'Логин должен содержать минимум 1 символ'),
-    password: z.string().min(1, 'Пароль должен содержать минимум 1 символ')
+    password: z.string().min(1, 'Пароль должен содержать минимум 1 символ'),
+    callSign: z.string()
+        .min(1, 'Позывной должен содержать минимум 1 символ')
+        .regex(/^[a-zA-Z]+$/, 'Позывной может содержать только латинские буквы и должен быть одним словом')
 });

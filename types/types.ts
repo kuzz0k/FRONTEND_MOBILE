@@ -3,6 +3,11 @@ import { z } from "zod";
 
 export type AuthType = z.infer<typeof authSchema>
 
+export type LoginRequest = {
+  username: string;
+  password: string;
+}
+
 export type LoginResponse = {
   access_token: string,
   refresh_token: string,

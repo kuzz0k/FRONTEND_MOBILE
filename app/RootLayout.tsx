@@ -54,7 +54,7 @@ export default function RootLayout() {
             refresh_token: refreshTokenValue,
             expires_in: 0,
             username: storedUsername || "mobile_user", // Берем из AsyncStorage
-            callSign: storedCallSign || undefined,
+            callSign: storedCallSign || "мобильный", // Значение по умолчанию если нет
           })
         )
         return
@@ -76,7 +76,7 @@ export default function RootLayout() {
               refresh_token: refreshResult.refresh_token,
               expires_in: refreshResult.expires_in,
               username: storedUsername || "mobile_user",
-              callSign: storedCallSign || undefined,
+              callSign: storedCallSign || "мобильный",
             })
           )
           return

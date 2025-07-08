@@ -33,6 +33,24 @@ const AuthForm: React.FC<AuthFormProps> = ({ control, errors, onSubmit, isLoadin
         <Text style={styles.errorText}>{errors.username.message}</Text>
       )}
       
+      <Text style={styles.label}>Позывной</Text>
+      <Controller
+        control={control}
+        name="callSign"
+        render={({ field: { onChange, onBlur, value } }) => (
+          <TextInput
+            style={[styles.input, errors.callSign && styles.errorInput]}
+            placeholder="Введите позывной (только русские буквы)"
+            onBlur={onBlur}
+            onChangeText={onChange}
+            value={value}
+          />
+        )}
+      />
+      {errors.callSign && (
+        <Text style={styles.errorText}>{errors.callSign.message}</Text>
+      )}
+      
       <Text style={styles.label}>Пароль</Text>
       <Controller
         control={control}
