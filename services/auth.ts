@@ -10,7 +10,7 @@ export const api = createApi({
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, LoginRequest>({
       query: (userData) => ({
-        url: "/auth/api/login",
+        url: "/api/auth/login",
         method: "POST",
         body: {
           username: userData.username,
@@ -20,7 +20,7 @@ export const api = createApi({
     }),
     validateToken: builder.mutation<any, string>({
       query: (accessToken) => ({
-        url: "/auth/api/test",
+        url: "/api/auth/test",
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`
@@ -29,7 +29,7 @@ export const api = createApi({
     }),
     refreshToken: builder.mutation<LoginResponse, { refreshToken: string }>({
       query: ({ refreshToken }) => ({
-        url: "/auth/api/refresh",
+        url: "/api/auth/refresh",
         method: "POST",
         body: {
           refresh_token: refreshToken
@@ -38,7 +38,7 @@ export const api = createApi({
     }),
     logout: builder.mutation<void, string>({
       query: (accessToken) => ({
-        url: "/auth/api/logout",
+        url: "/api/auth/logout",
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`

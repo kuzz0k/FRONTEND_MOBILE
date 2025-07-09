@@ -4,6 +4,8 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useSelector } from 'react-redux';
 import { MapType } from '../../constants/consts';
 import { RootState } from '../../store/store';
+import { EquipmentLayer } from './Equipments/EquipmentLayer';
+import { MogsLayer } from './Mogs/MogsLayer';
 import UserLocationMarker from './UserLocationMarker';
 
 interface CustomMapViewProps {
@@ -97,6 +99,12 @@ export default function CustomMapView({
             />
           </Marker>
         )}
+        
+        {/* Слой с мобильными операторами (Mogs) */}
+        <MogsLayer />
+        
+        {/* Слой с оборудованием */}
+        <EquipmentLayer />
         
         {children}
       </MapView>

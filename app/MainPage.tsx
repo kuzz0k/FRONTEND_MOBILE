@@ -1,12 +1,12 @@
 import { useAppDispatch, useAppSelector } from "@/hooks/redux"
 import { useLogoutMutation } from "@/services/auth"
+import { useGetGlobalStateQuery } from "@/services/globalState"
 import { WebSocketService } from "@/services/WebSocket"
-import React, { useEffect, useRef, useState } from "react"
-import {
-  Dimensions,
-  StyleSheet,
-  View,
-} from "react-native"
+import { addMog, deleteMog, disconnectMog, setMogs, updateMog } from "@/store/reducers/mogSlice"
+import { setEquipments } from "@/store/reducers/rlsSlice"
+import { ALL_TOPICS } from "@/types/types"
+import React, { useCallback, useEffect, useRef, useState } from "react"
+import { Dimensions, StyleSheet, View } from "react-native"
 import MapView, { Region } from "react-native-maps"
 import CenterOnUserButton from "../components/CenterOnUserButton"
 import HeaderModal from "../components/HeaderModal"
@@ -21,32 +21,90 @@ import { updateCoordinates } from "../store/reducers/coordinatesSlice"
 const { width, height } = Dimensions.get("window")
 
 export default function MainPage() {
-  const tokenState = useAppSelector(state => state.user.accessToken)
-  const isReady = useAppSelector(state => state.user.isReady) // Берем из Redux
-  const userCallSign = useAppSelector(state => state.user.callSign) // Берем позывной из Redux
-  const coordinates = useAppSelector(state => state.coordinates) // Координаты точки на экране
-  const userLocation = useAppSelector(state => state.userLocation) // Координаты пользователя
+  const tokenState = useAppSelector((state) => state.user.accessToken)
+  const isReady = useAppSelector((state) => state.user.isReady) // Берем из Redux
+  const userCallSign = useAppSelector((state) => state.user.callSign) // Берем позывной из Redux
+  const coordinates = useAppSelector((state) => state.coordinates) // Координаты точки на экране
+  const userLocation = useAppSelector((state) => state.userLocation) // Координаты пользователя
   const dispatch = useAppDispatch()
   const [logoutMutation] = useLogoutMutation()
-  
-  const { mapState, changeMapType } = useMap();
-  const { 
-    isLocationServiceRunning, 
-    locationError
-  } = useLocationService();
-  
+  const { data, isSuccess } = useGetGlobalStateQuery()
+
+  useEffect(() => {
+    if (data) {
+      dispatch(setMogs(data.mogs))
+      dispatch(setEquipments(data.equipment))
+    }
+  }, [isSuccess, data, dispatch])
+
+  // Мемоизированный callback для обработки обновлений WEBSOCKET
+  const handleMogUpdate = useCallback((mogUpdateData: any) => {
+    dispatch(updateMog(mogUpdateData));
+  }, [dispatch]);
+
+  const handleMogEntered = useCallback((mogEnteredData: any) => {
+    dispatch(addMog(mogEnteredData))
+  }, [dispatch]);
+
+  const handleMogDisconnected = useCallback((mogDisconnectedData: any) => {
+    dispatch(disconnectMog(mogDisconnectedData))
+  }, [dispatch])
+
+  const handleMogQuit = useCallback((mogQuitData: any) => {
+    dispatch(deleteMog(mogQuitData))
+  }, [dispatch]);
+
+  // const handleMogConnected = useCallback((mogConnectedData) => {
+  //   dispatch(updateMog())
+  // })
+
+
+  // ТОПИКИ ДЛЯ ПОДПИСКИ
+  const eventHandlers = useCallback(() => ({
+    [ALL_TOPICS.MOG_QUIT]: handleMogQuit,
+    [ALL_TOPICS.MOG_UPDATED]: handleMogUpdate,
+    [ALL_TOPICS.MOG_DISCONNECTED]: handleMogDisconnected,
+    [ALL_TOPICS.MOG_ENTERED]: handleMogEntered,
+    // [ALL_TOPICS.MOG_CONNECTED]:
+  }), [handleMogQuit, handleMogUpdate, handleMogDisconnected, handleMogEntered]);
+
+  useEffect(() => {
+    if (!tokenState) return;
+
+    WebSocketService.updateToken(tokenState);
+    WebSocketService.connect();
+
+    const handlers = eventHandlers();
+
+    // Подписываемся на WEBSOCKET.
+    Object.entries(handlers).forEach(([topic, callback]) => {
+      WebSocketService.subscribe(topic as ALL_TOPICS, callback);
+    })
+
+    return () => {
+      // Отписываемся от websocket
+      Object.entries(handlers).forEach(([topic, callback]) => {
+        WebSocketService.unsubscribe(topic as ALL_TOPICS, callback);
+      })
+      WebSocketService.disconnect();
+    };
+  }, [tokenState, eventHandlers]);
+
+  const { mapState, changeMapType } = useMap()
+  const { isLocationServiceRunning, locationError } = useLocationService()
+
   useEffect(() => {
     if (tokenState) {
-      WebSocketService.updateToken(tokenState);
-      WebSocketService.connect();
+      WebSocketService.updateToken(tokenState)
+      WebSocketService.connect()
     }
   }, [tokenState])
 
   const mapRef = useRef<MapView>(null)
 
   const [currentRegion, setCurrentRegion] = useState<Region>({
-    latitude: 55.7558, // Москва
-    longitude: 37.6173,
+    latitude: 0, // Москва
+    longitude: 0,
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   })
@@ -57,16 +115,18 @@ export default function MainPage() {
   const handleMapPress = (event: any) => {
     // Обновляем координаты точки на экране при нажатии на карту
     if (event.nativeEvent && event.nativeEvent.coordinate) {
-      const { latitude, longitude } = event.nativeEvent.coordinate;
-      dispatch(updateCoordinates({
-        lat: latitude,
-        lng: longitude
-      }));
+      const { latitude, longitude } = event.nativeEvent.coordinate
+      dispatch(
+        updateCoordinates({
+          lat: latitude,
+          lng: longitude,
+        })
+      )
     }
-    
+
     // Закрываем меню настроек карты при нажатии на карту
     if (isMapSettingsOpen) {
-      setIsMapSettingsOpen(false);
+      setIsMapSettingsOpen(false)
     }
   }
 
@@ -97,8 +157,7 @@ export default function MainPage() {
       WebSocketService.disconnect()
       locationService.stopLocationUpdates()
     } catch (error) {
-      console.error('Ошибка при выходе:', error)
-      // Даже если запрос logout failed, очищаем локальное состояние
+      console.error("Ошибка при выходе:", error)
       dispatch(logout())
       WebSocketService.disconnect()
       locationService.stopLocationUpdates()
@@ -141,7 +200,7 @@ export default function MainPage() {
         isVisible={true}
         coords={{
           latitude: coordinates.lat,
-          longitude: coordinates.lng
+          longitude: coordinates.lng,
         }}
         timestamp={new Date()}
         onGetRoute={handleGetRoute}
@@ -164,17 +223,18 @@ export default function MainPage() {
         followsUserLocation={false}
         onPress={handleMapPress}
         mapRef={mapRef}
-      >
-      </CustomMapView>
+      ></CustomMapView>
 
       {/* Кнопки зума */}
       <ZoomControls onZoomIn={zoomIn} onZoomOut={zoomOut} />
 
       {/* Кнопка центрирования на пользователе */}
       <View style={styles.centerOnUserContainer}>
-        <CenterOnUserButton 
+        <CenterOnUserButton
           onPress={centerOnUser}
-          isLocationAvailable={userLocation.isTracking && !!userLocation.latitude}
+          isLocationAvailable={
+            userLocation.isTracking && !!userLocation.latitude
+          }
         />
       </View>
     </View>

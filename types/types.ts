@@ -3,10 +3,7 @@ import { z } from "zod";
 
 export type AuthType = z.infer<typeof authSchema>
 
-export type LoginRequest = {
-  username: string;
-  password: string;
-}
+export type TopicCallback = (data: any) => void;
 
 export type LoginResponse = {
   access_token: string,
@@ -14,14 +11,68 @@ export type LoginResponse = {
   expires_in: number
 }
 
+export type LoginRequest = {
+  username: string;
+  password: string;
+}
+
+export type Zone = ZonePolygon | ZoneSector
+
+export interface GlobalStateResponse {
+  zones: Zone[];
+  refpoint: {
+    coordinates: Coordinates
+  },
+  mogs: Mog[],
+  aircrafts: AircraftType[],
+  equipment: EquipmentType[]
+}
+
+export enum EquipmentVariaties {
+  RADAR = "RADAR"
+}
+
+
+export type EquipmentType = {
+  id: string,
+  model: string,
+  name: string,
+  type: EquipmentVariaties,
+  connected: boolean,
+  coordinates: Coordinates,
+}
+
+export type AircraftType = {
+  id: string,
+  detectedBy: string,
+  type: TYPE,
+  coordinates: Coordinates,
+  cource: number,
+  heightInMeters: number,
+  speedInMeters: number,
+  position: {
+    azimuth: number,
+    distanceInMeters: number,
+    refpointId: string
+  }
+}
+
 export type Coordinates = {
   lat: number,
   lng: number,
 }
 
+export type Mog = {
+  username: string,
+  callSign: string,
+  ready: boolean,
+  connected: boolean,
+  coordinates: Coordinates
+}
+
 export enum ZONE_TYPE {
-  POLYGON = "polygon",
-  SECTOR = "sector"
+  POLYGON = "POLYGON",
+  SECTOR = "SECTOR"
 }
 
 export enum TYPE {
@@ -85,7 +136,65 @@ export enum TOPICS_TASKS {
   REMOVED = 'task-removed',
 }
 
+export enum ALL_TOPICS {
+  // ZONES
+  ZONE_CREATED = 'zone-created',
+  ZONE_UPDATED = 'zone-updated',
+  ZONE_DELETED = 'zone-deleted',
+
+  // MOGS
+  MOG_ENTERED = 'mog-entered',
+  MOG_CONNECTED = 'mog-connected',
+  MOG_DISCONNECTED = 'mog-disconnected',
+  MOG_QUIT = 'mog-quit',
+  MOG_UPDATED = 'mog-updated',
+
+  // AIRCRAFTS
+  AIRCRAFT_UPDATED = 'aircraft-updated',
+  AIRCRAFT_DELETED = 'aircraft-deleted',
+  AIRCRAFT_LOST = 'aircraft-lost',
+
+  // DEVICES
+  DEVICE_ENABLED = 'device-enabled',
+  DEVICE_DISABLED = 'device-disabled',
+
+  // REFPOINTS
+  REFPOINT_CREATED = 'refpoint-created',
+  REFPOINT_UPDATED = 'refpoint-updated',
+  REFPOINT_DELETED = 'refpoint-deleted',
+
+  // TASKS
+  TASK_CREATED = 'task-created',
+  TASK_EDITED = 'task-edited',
+  TASK_IMPACTED = 'task-impacted',
+  TASK_ACCEPTED = 'task-accepted',
+  TASK_REJECTED = 'task-rejected',
+  TASK_COMPLETED = 'task-completed',
+  TASK_REMOVED = 'task-removed',
+}
+
+
+
 // ZONES-INTERFACES
+
+export interface ZonePolygon {
+  equipmentId: string,
+  type: ZONE_TYPE.POLYGON,
+  params: {
+    pointsCoordinates: Coordinates[],
+  }
+}
+
+export interface ZoneSector {
+  equipmentId: string,
+  type: ZONE_TYPE.SECTOR,
+  params: {
+    centerCoordinates: Coordinates,
+    radiusInMeters: number,
+    startAngle: number,
+    endAngle: number,
+  },
+}
 
 export interface ZoneCreatedPolygon {
   equipmentId: string,
@@ -94,21 +203,22 @@ export interface ZoneCreatedPolygon {
   }
 }
 
+// прямоугольник типо
 export interface ZoneCreatedSector {
   equipmentId: string,
   params: {
-    centerCoordinates: Coordinates[]
+    centerCoordinates: Coordinates,
+    radiusInMeters: number,
+    startAngle: number,
+    endAngle: number,
   },
-  radiusInMeters: number,
-  startAngle: number,
-  endAngle: number,
 }
 
 export interface ZoneUpdatedPolygon {
   equipmentId: string,
   type: ZONE_TYPE,
   params: {
-    pointsCoordinates: Coordinates
+    pointsCoordinates: Coordinates[]
   },
 }
 
@@ -117,10 +227,10 @@ export interface ZoneUpdatedSector {
   type: ZONE_TYPE,
   params: {
     centerCoordinates: Coordinates
-  },
-  radiusInMeters: number,
-  startAngle: number,
-  endAngle: number,
+    radiusInMeters: number,
+    startAngle: number,
+    endAngle: number,
+  }
 }
 
 export interface ZoneDeleted {

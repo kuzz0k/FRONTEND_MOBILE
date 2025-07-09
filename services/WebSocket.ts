@@ -1,3 +1,4 @@
+import { ALL_TOPICS, TopicCallback } from "@/types/types";
 import { getUrl } from "./globals";
 
 type MessageHandler = (message: MessageEvent) => void;
@@ -13,7 +14,25 @@ class WebSocketAuth {
   private isConnecting: boolean = false;
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private accessToken: string | null = null;
+  private subscribers: Record<string, TopicCallback[]> = {};
 
+  subscribe(topic: ALL_TOPICS, callback: TopicCallback) {
+    if (!this.subscribers[topic]) {
+      this.subscribers[topic] = [];
+    }
+    this.subscribers[topic].push(callback);
+  }
+
+  unsubscribe(topic: ALL_TOPICS, callback: TopicCallback) {
+    this.subscribers[topic] = this.subscribers[topic]?.filter(cb => cb !== callback) || [];
+  }
+
+  private dispatchToSubscribers(topic: string, payload: any) {
+    const callbacks = this.subscribers[topic];
+    if (callbacks) {
+      callbacks.forEach(cb => cb(payload));
+    }
+  }
   updateToken(token: string) {
     this.accessToken = token;
   }
