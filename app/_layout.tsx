@@ -41,44 +41,49 @@ function RootLayoutContent() {
         return;
       }
 
-      const tokenValidationResult = await validateToken(accessToken)
-        .unwrap()
-        .catch((error) => {
-          return error;
-        });
-
-      if (!tokenValidationResult?.status) {
-        const refreshResult = await refreshToken({ refreshToken: refreshTokenValue })
-          .unwrap()
-          .catch((error) => {
-            return error;
-          });
-
-        if (refreshResult?.data?.tokens) {
-          await AsyncStorage.setItem("accessToken", refreshResult.data.tokens.accessToken);
-          await AsyncStorage.setItem("refreshToken", refreshResult.data.tokens.refreshToken);
-          
-          dispatch(login({
-            access_token: refreshResult.data.tokens.accessToken,
-            refresh_token: refreshResult.data.tokens.refreshToken,
-            expires_in: 0, // You might want to get this from the response
-            username: storedUsername || "",
-            callSign: storedCallSign || "",
-          }));
-        } else {
-          await AsyncStorage.multiRemove(["accessToken", "refreshToken", "username", "callSign"]);
-        }
-      } else {
+      try {
+        // Пытаемся валидировать текущий токен
+        await validateToken(accessToken).unwrap();
+        
+        // Если валидация прошла успешно, логиним пользователя
         dispatch(login({
           access_token: accessToken,
           refresh_token: refreshTokenValue,
-          expires_in: 0, // You might want to get this from the response
+          expires_in: 0,
           username: storedUsername || "",
           callSign: storedCallSign || "",
         }));
+      } catch {
+        // Если валидация не прошла, пытаемся обновить токен
+        try {
+          const refreshResult = await refreshToken({ refreshToken: refreshTokenValue }).unwrap();
+          
+          if (refreshResult?.access_token && refreshResult?.refresh_token) {
+            // Сохраняем новые токены
+            await AsyncStorage.setItem("accessToken", refreshResult.access_token);
+            await AsyncStorage.setItem("refreshToken", refreshResult.refresh_token);
+            
+            dispatch(login({
+              access_token: refreshResult.access_token,
+              refresh_token: refreshResult.refresh_token,
+              expires_in: refreshResult.expires_in || 0,
+              username: storedUsername || "",
+              callSign: storedCallSign || "",
+            }));
+          } else {
+            // Если обновление токена не удалось, очищаем хранилище
+            await AsyncStorage.multiRemove(["accessToken", "refreshToken", "username", "callSign"]);
+          }
+        } catch (refreshError) {
+          // Если обновление токена не удалось, очищаем хранилище
+          console.error("Token refresh error:", refreshError);
+          await AsyncStorage.multiRemove(["accessToken", "refreshToken", "username", "callSign"]);
+        }
       }
     } catch (error) {
       console.error("Token validation error:", error);
+      // В случае любой другой ошибки, очищаем хранилище
+      await AsyncStorage.multiRemove(["accessToken", "refreshToken", "username", "callSign"]);
     } finally {
       setIsLoading(false);
     }
