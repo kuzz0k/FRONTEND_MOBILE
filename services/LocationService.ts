@@ -94,12 +94,12 @@ class LocationService {
       )
 
       if (!WebSocketService.isConnected) {
-        console.warn("WebSocket не подключен, местоположение не отправлено")
+        // console.warn("WebSocket не подключен, местоположение не отправлено")
         return
       }
 
       // Формируем payload в соответствии с типом MogUpdated
-      const state = store.getState();
+      const state = store.getState()
       const mogUpdatedPayload: MogUpdated = {
         username: state.user.username || "mobile_user", // берем из Redux состояния
         callSign: state.user.callSign || "мобильный", // берем из Redux состояния
@@ -116,7 +116,6 @@ class LocationService {
       })
 
       WebSocketService.sendMessage(message)
-      console.log("Местоположение отправлено:", mogUpdatedPayload)
     } catch (error) {
       console.error("Ошибка при отправке местоположения:", error)
       store.dispatch(setLocationError("Ошибка при отправке местоположения"))
@@ -192,12 +191,14 @@ class LocationService {
       // Получаем текущее местоположение
       const locationData = await this.getCurrentLocation()
       if (!locationData) {
-        console.warn("Не удалось получить текущее местоположение для отправки статуса готовности")
+        console.warn(
+          "Не удалось получить текущее местоположение для отправки статуса готовности"
+        )
         return
       }
 
       // Формируем payload в соответствии с типом MogUpdated
-      const state = store.getState();
+      const state = store.getState()
       const mogUpdatedPayload: MogUpdated = {
         username: state.user.username || "mobile_user", // берем из Redux состояния
         callSign: state.user.callSign || "мобильный", // берем из Redux состояния
@@ -214,7 +215,7 @@ class LocationService {
       })
 
       WebSocketService.sendMessage(message)
-      console.log("Статус готовности отправлен:", mogUpdatedPayload)
+      // console.log("Статус готовности отправлен:", mogUpdatedPayload)
     } catch (error) {
       console.error("Ошибка при отправке статуса готовности:", error)
     }

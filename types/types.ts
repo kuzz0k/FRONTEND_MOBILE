@@ -322,6 +322,49 @@ export interface RefPointUpdated {
 
 // TASK INTERFACES
 
+//HTTP
+export type TASK = TASK_DOT | TASK_AIRCRAFT
+
+export type TASK_AIRCRAFT = {
+  id: string,
+  createdBy: string,
+  assignedTo: string,
+  message: string,
+  type: TYPE_TO.TO_AIRCRAFT
+  status: STATUS,
+  aircraftId: string,
+  impacted: boolean,
+}
+
+export type TASK_DOT = {
+  id: string,
+  createdBy: string,
+  assignedTo: string,
+  message: string,
+  type: TYPE_TO.TO_POINT
+  status: STATUS,
+  coordinates: Coordinates
+}
+
+export interface TaskDotCreatedHttp {
+  assignedTo: string,
+  message: string,
+  coordinates: Coordinates;
+}
+
+export interface TaskAirCraftCreatedHttp {
+  assignedTo: string,
+  message: string,
+  aircraftId: string,
+}
+
+export interface TaskUpdation {
+  message: string,
+  assignedTo: string,
+}
+
+//WEBSOCKET
+
 export interface TaskDotCreated {
   id: string,
   createdBy: string,
@@ -332,7 +375,7 @@ export interface TaskDotCreated {
   coordinates: Coordinates,
 }
 
-export interface TaskPointCreated {
+export interface TaskAirCraftCreated {
   id: string,
   createdBy: string,
   assignedTo: string,
@@ -342,6 +385,7 @@ export interface TaskPointCreated {
   aircraftId: string,
   impacted: boolean
 }
+
 
 export interface TaskEdited {
   id: string,
@@ -374,3 +418,4 @@ export interface TaskRemoved {
   id: string,
   assignedTo: string
 }
+

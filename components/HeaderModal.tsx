@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import {
   Dimensions,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -8,6 +9,7 @@ import {
 } from "react-native"
 import Icon from "react-native-vector-icons/Feather"; // or appropriate icon library
 import { MAP_LABELS } from "../constants/consts"
+import { TASK, TYPE_TO } from "../types/types"
 
 const { width } = Dimensions.get("window")
 
@@ -15,7 +17,6 @@ interface HeaderModalProps {
   isVisible: boolean
   coords: { latitude: number; longitude: number }
   timestamp: Date | string
-  onGetRoute: () => void
   onReadyToggle: () => void
   isReady: boolean
   notifications: number
@@ -26,6 +27,10 @@ interface HeaderModalProps {
   onLogout?: () => void
   isLocationServiceRunning?: boolean
   locationError?: string | null
+  tasks?: TASK[]
+  onTaskAccept?: (taskId: string) => void
+  onTaskReject?: (taskId: string) => void
+  isTasksLoading?: boolean
 }
 
 /**
@@ -41,12 +46,19 @@ interface HeaderModalProps {
  *  - userName: string
  *  - mapType: 'hybrid' | 'standard' | 'satellite'
  *  - onMapTypeChange: (mapType: 'hybrid' | 'standard' | 'satellite') => void
+ *  - onMapSettingsToggle?: (isOpen: boolean) => void
+ *  - onLogout?: () => void
+ *  - isLocationServiceRunning?: boolean
+ *  - locationError?: string | null
+ *  - tasks?: TASK[] - array of tasks to display in dropdown
+ *  - onTaskAccept?: (taskId: string) => void - handler for accepting task
+ *  - onTaskReject?: (taskId: string) => void - handler for rejecting task
+ *  - isTasksLoading?: boolean - loading state for tasks
  */
 export default function HeaderModal({
   isVisible,
   coords,
   timestamp,
-  onGetRoute,
   onReadyToggle,
   isReady,
   notifications,
@@ -57,9 +69,14 @@ export default function HeaderModal({
   onLogout,
   isLocationServiceRunning = false,
   locationError,
+  tasks = [],
+  onTaskAccept,
+  onTaskReject,
+  isTasksLoading = false,
 }: HeaderModalProps) {
   const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [isTasksModalOpen, setIsTasksModalOpen] = useState(false)
 
   const formatCoords = (lat: number, lon: number) => {
     if (lat === 0 && lon === 0) {
@@ -96,6 +113,14 @@ export default function HeaderModal({
     setIsUserMenuOpen(newState)
   }
 
+  const toggleTasksModal = () => {
+    setIsTasksModalOpen(!isTasksModalOpen)
+  }
+
+  const handleTasksPress = () => {
+    toggleTasksModal()
+  }
+
   return isVisible ? (
     <View style={styles.modalContainer} pointerEvents="box-none">
       <View style={styles.container}>
@@ -126,7 +151,10 @@ export default function HeaderModal({
           )}
         </View>
         <View style={styles.statusBlock}>
-          <TouchableOpacity style={styles.routeButton} onPress={onGetRoute}>
+          <TouchableOpacity
+            style={styles.routeButton}
+            onPress={handleTasksPress}
+          >
             <Text style={styles.routeText}>Задачи</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={onReadyToggle} style={styles.statusButton}>
@@ -206,6 +234,64 @@ export default function HeaderModal({
             <Icon name="log-out" size={16} color="#f44336" />
             <Text style={styles.userMenuText}>Выйти</Text>
           </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Tasks Modal */}
+      {isTasksModalOpen && (
+        <View style={styles.tasksDropdown} pointerEvents="auto">
+          <View style={styles.tasksContainer}>
+            <Text style={styles.tasksTitle}>Задачи</Text>
+            <ScrollView 
+              style={styles.tasksScrollView}
+              showsVerticalScrollIndicator={true}
+              nestedScrollEnabled={true}
+            >
+              {isTasksLoading ? (
+                <Text style={styles.noTasksText}>Загрузка задач...</Text>
+              ) : tasks.length === 0 ? (
+                <Text style={styles.noTasksText}>Нет активных задач</Text>
+              ) : (
+                tasks.map((task) => (
+                  <View key={task.id} style={styles.taskItem}>
+                    <Text style={styles.taskMessage}>{task.message}</Text>
+                    {task.type === TYPE_TO.TO_POINT && "coordinates" in task && (
+                      <Text style={styles.taskCoords}>
+                        Ш: {task.coordinates.lat.toFixed(6)} Д:{" "}
+                        {task.coordinates.lng.toFixed(6)}
+                      </Text>
+                    )}
+                    <View style={styles.taskButtons}>
+                      <TouchableOpacity
+                        style={[styles.taskButton, styles.rejectButton]}
+                        onPress={() => {
+                          onTaskReject?.(task.id)
+                          setIsTasksModalOpen(false)
+                        }}
+                      >
+                        <Text style={styles.taskButtonText}>Отклонить</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.taskButton, styles.acceptButton]}
+                        onPress={() => {
+                          onTaskAccept?.(task.id)
+                          setIsTasksModalOpen(false)
+                        }}
+                      >
+                        <Text style={styles.taskButtonText}>Принять</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.closeTasksButton}
+              onPress={() => setIsTasksModalOpen(false)}
+            >
+              <Text style={styles.closeTasksText}>Закрыть</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
     </View>
@@ -381,5 +467,87 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#f44336",
     marginLeft: 8,
+  },
+  tasksDropdown: {
+    position: "absolute",
+    top: 60,
+    right: 220,
+    backgroundColor: "transparent",
+    zIndex: 1001,
+    width: 200,
+  },
+  tasksContainer: {
+    backgroundColor: "white",
+    borderRadius: 8,
+    elevation: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    padding: 12,
+    maxHeight: 300,
+  },
+  tasksScrollView: {
+    maxHeight: 200,
+  },
+  tasksTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  noTasksText: {
+    fontSize: 12,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  taskItem: {
+    backgroundColor: "#f9f9f9",
+    borderRadius: 6,
+    padding: 8,
+    marginBottom: 6,
+  },
+  taskMessage: {
+    fontSize: 12,
+    color: "#333",
+    marginBottom: 3,
+  },
+  taskCoords: {
+    fontSize: 10,
+    color: "#666",
+    marginBottom: 6,
+  },
+  taskButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  taskButton: {
+    flex: 1,
+    paddingVertical: 6,
+    borderRadius: 4,
+    marginHorizontal: 3,
+  },
+  rejectButton: {
+    backgroundColor: "#f44336",
+  },
+  acceptButton: {
+    backgroundColor: "#4CAF50",
+  },
+  taskButtonText: {
+    color: "white",
+    textAlign: "center",
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+  closeTasksButton: {
+    alignSelf: "center",
+    marginTop: 8,
+  },
+  closeTasksText: {
+    fontSize: 12,
+    color: "#1976d2",
+    fontWeight: "500",
   },
 })

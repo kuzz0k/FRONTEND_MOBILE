@@ -122,7 +122,7 @@ class WebSocketAuth {
     }
 
     this.currentReconnectAttempts++;
-    console.log(`Попытка переподключения ${this.currentReconnectAttempts}/${this.maxReconnectAttempts}`);
+    // console.log(`Попытка переподключения ${this.currentReconnectAttempts}/${this.maxReconnectAttempts}`);
 
     this.reconnectTimeout = setTimeout(() => {
       this.connect();

@@ -1,6 +1,7 @@
 import { useAppDispatch, useAppSelector } from "@/hooks/redux"
-import { useLogoutMutation } from "@/services/auth"
+import { api, useLogoutMutation } from "@/services/auth"
 import { useGetGlobalStateQuery } from "@/services/globalState"
+import { tasksApi, useAcceptTaskMutation, useGetTasksQuery, useRejectTaskMutation } from "@/services/tasks"
 import { WebSocketService } from "@/services/WebSocket"
 import { addMog, deleteMog, disconnectMog, setMogs, updateMog } from "@/store/reducers/mogSlice"
 import { setEquipments } from "@/store/reducers/rlsSlice"
@@ -27,6 +28,11 @@ export default function MainPage() {
   const userLocation = useAppSelector((state) => state.userLocation) // Координаты пользователя
   const dispatch = useAppDispatch()
   const [logoutMutation] = useLogoutMutation()
+  const [acceptTask] = useAcceptTaskMutation()
+  const [rejectTask] = useRejectTaskMutation()
+  const { data: tasks, isLoading: isTasksLoading } = useGetTasksQuery(undefined, {
+    skip: !tokenState, // Пропускаем запрос если нет токена
+  })
   const { data, isSuccess } = useGetGlobalStateQuery()
 
   useEffect(() => {
@@ -133,10 +139,6 @@ export default function MainPage() {
     setCurrentRegion(region)
   }
 
-  const handleGetRoute = () => {
-    console.log("модалка с задачами")
-  }
-
   const handleReadyToggle = async () => {
     dispatch(toggleReady())
     // Отправляем обновление статуса готовности в WebSocket
@@ -149,17 +151,38 @@ export default function MainPage() {
 
   const handleLogout = async () => {
     try {
+      WebSocketService.disconnect()
       if (tokenState) {
         await logoutMutation(tokenState).unwrap()
       }
       dispatch(logout())
-      WebSocketService.disconnect()
+      dispatch(api.util.resetApiState())
+      dispatch(tasksApi.util.resetApiState())
       locationService.stopLocationUpdates()
     } catch (error) {
       console.error("Ошибка при выходе:", error)
       dispatch(logout())
+      dispatch(api.util.resetApiState())
+      dispatch(tasksApi.util.resetApiState())
       WebSocketService.disconnect()
       locationService.stopLocationUpdates()
+    }
+  }
+
+  // Обработчики для задач
+  const handleTaskAccept = async (taskId: string) => {
+    try {
+      await acceptTask(taskId).unwrap()
+    } catch (error) {
+      console.error("Ошибка при принятии задачи:", error)
+    }
+  }
+
+  const handleTaskReject = async (taskId: string) => {
+    try {
+      await rejectTask(taskId).unwrap()
+    } catch (error) {
+      console.error("Ошибка при отклонении задачи:", error)
     }
   }
 
@@ -202,7 +225,6 @@ export default function MainPage() {
           longitude: userLocation.longitude || 0,
         }}
         timestamp={userLocation.timestamp ? new Date(userLocation.timestamp) : new Date()}
-        onGetRoute={handleGetRoute}
         onReadyToggle={handleReadyToggle}
         isReady={isReady}
         notifications={notifications}
@@ -213,6 +235,10 @@ export default function MainPage() {
         onLogout={handleLogout}
         isLocationServiceRunning={isLocationServiceRunning}
         locationError={locationError}
+        tasks={tasks}
+        onTaskAccept={handleTaskAccept}
+        onTaskReject={handleTaskReject}
+        isTasksLoading={isTasksLoading}
       />
 
       <CustomMapView

@@ -1,4 +1,5 @@
 import { globalState } from "@/services/globalState"
+import { tasksApi } from "@/services/tasks"
 import { setStoreRef } from "@/utils/globals"
 import { configureStore } from "@reduxjs/toolkit"
 import { api } from "../services/auth"
@@ -24,12 +25,14 @@ export const store = configureStore({
     mog: mogReducer,
     userLocation: userLocationReducer,
     apiQuery: api.reducer,
-    [globalState.reducerPath]: globalState.reducer
+    [globalState.reducerPath]: globalState.reducer,
+    [tasksApi.reducerPath]: tasksApi.reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(api.middleware)
-      .concat(globalState.middleware),
+      .concat(globalState.middleware)
+      .concat(tasksApi.middleware),
 });
 
 // Set store reference for utils that need it

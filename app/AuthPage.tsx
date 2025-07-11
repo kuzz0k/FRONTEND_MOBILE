@@ -1,7 +1,8 @@
 import AuthForm from "@/components/ui/AuthForm"
 import { authSchema } from "@/constants/consts"
 import { useAppDispatch } from "@/hooks/redux"
-import { useLoginMutation } from "@/services/auth"
+import { api, useLoginMutation } from "@/services/auth"
+import { tasksApi } from "@/services/tasks"
 import { userSlice } from "@/store/reducers/authSlice"
 import { AuthType, LoginRequest } from "@/types/types"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -35,6 +36,10 @@ const AuthPage: React.FC = () => {
       };
       const result = await login(loginRequest).unwrap();
       setIsLoading(true);
+
+      // Очищаем кэш всех API при входе для получения свежих данных
+      dispatch(api.util.resetApiState());
+      dispatch(tasksApi.util.resetApiState());
 
       // Сохраняем в Redux все данные включая callSign
       dispatch(userSlice.actions.login({
