@@ -24,7 +24,6 @@ export default function MainPage() {
   const tokenState = useAppSelector((state) => state.user.accessToken)
   const isReady = useAppSelector((state) => state.user.isReady) // Берем из Redux
   const userCallSign = useAppSelector((state) => state.user.callSign) // Берем позывной из Redux
-  const coordinates = useAppSelector((state) => state.coordinates) // Координаты точки на экране
   const userLocation = useAppSelector((state) => state.userLocation) // Координаты пользователя
   const dispatch = useAppDispatch()
   const [logoutMutation] = useLogoutMutation()
@@ -135,7 +134,7 @@ export default function MainPage() {
   }
 
   const handleGetRoute = () => {
-    console.log("Получить маршрут")
+    console.log("модалка с задачами")
   }
 
   const handleReadyToggle = async () => {
@@ -199,10 +198,10 @@ export default function MainPage() {
       <HeaderModal
         isVisible={true}
         coords={{
-          latitude: coordinates.lat,
-          longitude: coordinates.lng,
+          latitude: userLocation.latitude || 0,
+          longitude: userLocation.longitude || 0,
         }}
-        timestamp={new Date()}
+        timestamp={userLocation.timestamp ? new Date(userLocation.timestamp) : new Date()}
         onGetRoute={handleGetRoute}
         onReadyToggle={handleReadyToggle}
         isReady={isReady}
