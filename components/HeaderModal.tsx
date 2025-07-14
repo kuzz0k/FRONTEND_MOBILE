@@ -9,7 +9,8 @@ import {
 } from "react-native"
 import Icon from "react-native-vector-icons/Feather"; // or appropriate icon library
 import { MAP_LABELS } from "../constants/consts"
-import { TASK, TYPE_TO } from "../types/types"
+import { TYPE_TO } from "../types/types"
+import { useAppSelector } from "@/hooks/redux";
 
 const { width } = Dimensions.get("window")
 
@@ -27,7 +28,6 @@ interface HeaderModalProps {
   onLogout?: () => void
   isLocationServiceRunning?: boolean
   locationError?: string | null
-  tasks?: TASK[]
   onTaskAccept?: (taskId: string) => void
   onTaskReject?: (taskId: string) => void
   isTasksLoading?: boolean
@@ -69,7 +69,6 @@ export default function HeaderModal({
   onLogout,
   isLocationServiceRunning = false,
   locationError,
-  tasks = [],
   onTaskAccept,
   onTaskReject,
   isTasksLoading = false,
@@ -77,6 +76,7 @@ export default function HeaderModal({
   const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isTasksModalOpen, setIsTasksModalOpen] = useState(false)
+  const tasks = useAppSelector(state => state.tasks.tasks)
 
   const formatCoords = (lat: number, lon: number) => {
     if (lat === 0 && lon === 0) {
@@ -485,10 +485,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     padding: 12,
-    maxHeight: 300,
+    maxHeight: 1200,
   },
   tasksScrollView: {
-    maxHeight: 200,
+    maxHeight: 1200,
   },
   tasksTitle: {
     fontSize: 14,

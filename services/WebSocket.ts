@@ -64,6 +64,16 @@ class WebSocketAuth {
       this.socket.onmessage = (event) => {
         console.log("Получено сообщение от сервера:", event.data);
         this.messageHandler?.(event);
+        
+        // Парсим сообщение и отправляем в подписчики
+        try {
+          const message = JSON.parse(event.data);
+          if (message.topic && message.payload) {
+            this.dispatchToSubscribers(message.topic, message.payload);
+          }
+        } catch (error) {
+          console.error("Ошибка при парсинге WebSocket сообщения:", error);
+        }
       };
 
       this.socket.onclose = (event: CloseEvent) => {

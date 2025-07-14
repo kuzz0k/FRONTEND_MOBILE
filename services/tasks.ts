@@ -1,4 +1,5 @@
 import { selectBaseUrl } from "@/store/reducers/appSettingsSlice";
+import { setError, setLoading, setTasks, updateTaskStatus as updateTaskStatusInSlice } from "@/store/reducers/tasksSlice";
 import { RootState } from "@/store/store";
 import { STATUS, TASK } from "@/types/types";
 import { getToken } from "@/utils/globals";
@@ -46,6 +47,15 @@ export const tasksApi = createApi({
       },
       providesTags: ['Task'],
       keepUnusedDataFor: 0,
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          dispatch(setLoading(true));
+          const { data } = await queryFulfilled;
+          dispatch(setTasks(data));
+        } catch (error) {
+          dispatch(setError('Ошибка загрузки задач'));
+        }
+      },
     }),
     updateTaskStatus: builder.mutation<void, UpdateTaskStatusRequest>({
       query: ({ taskId, status }) => ({
@@ -60,6 +70,16 @@ export const tasksApi = createApi({
         }
       }),
       invalidatesTags: ['Task'],
+      async onQueryStarted({ taskId, status }, { dispatch, queryFulfilled }) {
+        try {
+          // Оптимистичное обновление
+          dispatch(updateTaskStatusInSlice({ taskId, status }));
+          await queryFulfilled;
+        } catch {
+          // В случае ошибки можно откатить изменения или показать ошибку
+          dispatch(setError('Ошибка обновления статуса задачи'));
+        }
+      },
     }),
   }),
 });

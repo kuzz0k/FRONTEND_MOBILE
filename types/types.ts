@@ -343,7 +343,8 @@ export type TASK_DOT = {
   message: string,
   type: TYPE_TO.TO_POINT
   status: STATUS,
-  coordinates: Coordinates
+  coordinates: Coordinates,
+  mogUsername?: string
 }
 
 export interface TaskDotCreatedHttp {
@@ -373,6 +374,7 @@ export interface TaskDotCreated {
   type: TYPE_TO,
   status: STATUS,
   coordinates: Coordinates,
+  mogUsername?: string
 }
 
 export interface TaskAirCraftCreated {

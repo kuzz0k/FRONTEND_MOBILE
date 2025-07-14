@@ -11,6 +11,7 @@ import mapReducer from "./reducers/mapSlice"
 import mogReducer from "./reducers/mogSlice"
 import reperDotReducer from "./reducers/reperDotSlice"
 import equipmentReducer from "./reducers/rlsSlice"
+import tasksReducer from "./reducers/tasksSlice"
 import userLocationReducer from "./reducers/userLocationSlice"
 
 export const store = configureStore({
@@ -23,6 +24,7 @@ export const store = configureStore({
     map: mapReducer,
     equipment: equipmentReducer,
     mog: mogReducer,
+    tasks: tasksReducer,
     userLocation: userLocationReducer,
     apiQuery: api.reducer,
     [globalState.reducerPath]: globalState.reducer,

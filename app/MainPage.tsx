@@ -5,7 +5,8 @@ import { tasksApi, useAcceptTaskMutation, useGetTasksQuery, useRejectTaskMutatio
 import { WebSocketService } from "@/services/WebSocket"
 import { addMog, deleteMog, disconnectMog, setMogs, updateMog } from "@/store/reducers/mogSlice"
 import { setEquipments } from "@/store/reducers/rlsSlice"
-import { ALL_TOPICS } from "@/types/types"
+import { addTask, removeTask, setTasks, updateTask, updateTaskStatus } from "@/store/reducers/tasksSlice"
+import { ALL_TOPICS, STATUS } from "@/types/types"
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Dimensions, StyleSheet, View } from "react-native"
 import MapView, { Region } from "react-native-maps"
@@ -42,6 +43,12 @@ export default function MainPage() {
     }
   }, [isSuccess, data, dispatch])
 
+  useEffect(() => {
+    if (tasks) {
+      dispatch(setTasks(tasks))
+    }
+  }, [tasks, isTasksLoading])
+
   // Мемоизированный callback для обработки обновлений WEBSOCKET
   const handleMogUpdate = useCallback((mogUpdateData: any) => {
     dispatch(updateMog(mogUpdateData));
@@ -59,6 +66,37 @@ export default function MainPage() {
     dispatch(deleteMog(mogQuitData))
   }, [dispatch]);
 
+  // Мемоизированные callback для обработки обновлений задач через WEBSOCKET
+  const handleTaskCreated = useCallback((taskData: any) => {
+    dispatch(addTask(taskData));
+  }, [dispatch]);
+
+  const handleTaskEdited = useCallback((taskData: any) => {
+    // Обновляем всю задачу при редактировании
+    dispatch(updateTask(taskData));
+  }, [dispatch]);
+
+  const handleTaskImpacted = useCallback((taskData: any) => {
+    // При воздействии на задачу можем обновить её статус или другие поля
+    dispatch(updateTask(taskData));
+  }, [dispatch]);
+
+  const handleTaskAccepted = useCallback((taskData: any) => {
+    dispatch(updateTaskStatus({ taskId: taskData.id, status: STATUS.ACCEPTED }));
+  }, [dispatch]);
+
+  const handleTaskRejected = useCallback((taskData: any) => {
+    dispatch(updateTaskStatus({ taskId: taskData.id, status: STATUS.REJECTED }));
+  }, [dispatch]);
+
+  const handleTaskCompleted = useCallback((taskData: any) => {
+    dispatch(updateTaskStatus({ taskId: taskData.id, status: STATUS.COMPLETED }));
+  }, [dispatch]);
+
+  const handleTaskRemoved = useCallback((taskData: any) => {
+    dispatch(removeTask(taskData.id));
+  }, [dispatch]);
+
   // const handleMogConnected = useCallback((mogConnectedData) => {
   //   dispatch(updateMog())
   // })
@@ -66,12 +104,21 @@ export default function MainPage() {
 
   // ТОПИКИ ДЛЯ ПОДПИСКИ
   const eventHandlers = useCallback(() => ({
+    // MOGS
     [ALL_TOPICS.MOG_QUIT]: handleMogQuit,
     [ALL_TOPICS.MOG_UPDATED]: handleMogUpdate,
     [ALL_TOPICS.MOG_DISCONNECTED]: handleMogDisconnected,
     [ALL_TOPICS.MOG_ENTERED]: handleMogEntered,
+    // TASKS
+    [ALL_TOPICS.TASK_CREATED]: handleTaskCreated,
+    [ALL_TOPICS.TASK_EDITED]: handleTaskEdited,
+    [ALL_TOPICS.TASK_IMPACTED]: handleTaskImpacted,
+    [ALL_TOPICS.TASK_ACCEPTED]: handleTaskAccepted,
+    [ALL_TOPICS.TASK_REJECTED]: handleTaskRejected,
+    [ALL_TOPICS.TASK_COMPLETED]: handleTaskCompleted,
+    [ALL_TOPICS.TASK_REMOVED]: handleTaskRemoved,
     // [ALL_TOPICS.MOG_CONNECTED]:
-  }), [handleMogQuit, handleMogUpdate, handleMogDisconnected, handleMogEntered]);
+  }), [handleMogQuit, handleMogUpdate, handleMogDisconnected, handleMogEntered, handleTaskCreated, handleTaskEdited, handleTaskImpacted, handleTaskAccepted, handleTaskRejected, handleTaskCompleted, handleTaskRemoved]);
 
   useEffect(() => {
     if (!tokenState) return;
@@ -97,13 +144,6 @@ export default function MainPage() {
 
   const { mapState, changeMapType } = useMap()
   const { isLocationServiceRunning, locationError } = useLocationService()
-
-  useEffect(() => {
-    if (tokenState) {
-      WebSocketService.updateToken(tokenState)
-      WebSocketService.connect()
-    }
-  }, [tokenState])
 
   const mapRef = useRef<MapView>(null)
 
@@ -235,7 +275,6 @@ export default function MainPage() {
         onLogout={handleLogout}
         isLocationServiceRunning={isLocationServiceRunning}
         locationError={locationError}
-        tasks={tasks}
         onTaskAccept={handleTaskAccept}
         onTaskReject={handleTaskReject}
         isTasksLoading={isTasksLoading}
