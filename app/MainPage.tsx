@@ -1,7 +1,7 @@
 import { useAppDispatch, useAppSelector } from "@/hooks/redux"
 import { api, useLogoutMutation } from "@/services/auth"
 import { useGetGlobalStateQuery } from "@/services/globalState"
-import { tasksApi, useAcceptTaskMutation, useGetTasksQuery, useRejectTaskMutation } from "@/services/tasks"
+import { tasksApi, useAcceptTaskMutation, useCompleteTaskMutation, useGetTasksQuery, useRejectTaskMutation } from "@/services/tasks"
 import { WebSocketService } from "@/services/WebSocket"
 import { addMog, deleteMog, disconnectMog, setMogs, updateMog } from "@/store/reducers/mogSlice"
 import { setEquipments } from "@/store/reducers/rlsSlice"
@@ -31,6 +31,7 @@ export default function MainPage() {
   const [logoutMutation] = useLogoutMutation()
   const [acceptTask] = useAcceptTaskMutation()
   const [rejectTask] = useRejectTaskMutation()
+  const [completeTask] = useCompleteTaskMutation()
   const { data: tasks, isLoading: isTasksLoading } = useGetTasksQuery(undefined, {
     skip: !tokenState, // Пропускаем запрос если нет токена
   })
@@ -47,7 +48,7 @@ export default function MainPage() {
     if (tasks) {
       dispatch(setTasks(tasks))
     }
-  }, [tasks, isTasksLoading])
+  }, [tasks, isTasksLoading, dispatch])
 
   // Мемоизированный callback для обработки обновлений WEBSOCKET
   const handleMogUpdate = useCallback((mogUpdateData: any) => {
@@ -226,6 +227,14 @@ export default function MainPage() {
     }
   }
 
+  const handleTaskComplete = async (taskId: string) => {
+    try {
+      await completeTask(taskId).unwrap()
+    } catch (error) {
+      console.error("Ошибка при завершении задачи:", error)
+    }
+  }
+
   const zoomIn = () => {
     const newRegion = {
       ...currentRegion,
@@ -277,6 +286,7 @@ export default function MainPage() {
         locationError={locationError}
         onTaskAccept={handleTaskAccept}
         onTaskReject={handleTaskReject}
+        onTaskComplete={handleTaskComplete}
         isTasksLoading={isTasksLoading}
       />
 

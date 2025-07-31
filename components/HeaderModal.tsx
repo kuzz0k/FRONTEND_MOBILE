@@ -1,4 +1,5 @@
-import React, { useState } from "react"
+import { useAppSelector } from "@/hooks/redux";
+import React, { useState } from "react";
 import {
   Dimensions,
   ScrollView,
@@ -6,11 +7,10 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from "react-native"
+} from "react-native";
 import Icon from "react-native-vector-icons/Feather"; // or appropriate icon library
-import { MAP_LABELS } from "../constants/consts"
-import { TYPE_TO } from "../types/types"
-import { useAppSelector } from "@/hooks/redux";
+import { MAP_LABELS } from "../constants/consts";
+import { STATUS, TYPE_TO } from "../types/types";
 
 const { width } = Dimensions.get("window")
 
@@ -30,6 +30,7 @@ interface HeaderModalProps {
   locationError?: string | null
   onTaskAccept?: (taskId: string) => void
   onTaskReject?: (taskId: string) => void
+  onTaskComplete?: (taskId: string) => void
   isTasksLoading?: boolean
 }
 
@@ -71,6 +72,7 @@ export default function HeaderModal({
   locationError,
   onTaskAccept,
   onTaskReject,
+  onTaskComplete,
   isTasksLoading = false,
 }: HeaderModalProps) {
   const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false)
@@ -262,24 +264,49 @@ export default function HeaderModal({
                       </Text>
                     )}
                     <View style={styles.taskButtons}>
-                      <TouchableOpacity
-                        style={[styles.taskButton, styles.rejectButton]}
-                        onPress={() => {
-                          onTaskReject?.(task.id)
-                          setIsTasksModalOpen(false)
-                        }}
-                      >
-                        <Text style={styles.taskButtonText}>Отклонить</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.taskButton, styles.acceptButton]}
-                        onPress={() => {
-                          onTaskAccept?.(task.id)
-                          setIsTasksModalOpen(false)
-                        }}
-                      >
-                        <Text style={styles.taskButtonText}>Принять</Text>
-                      </TouchableOpacity>
+                      {task.status === STATUS.PENDING && (
+                        <>
+                          <TouchableOpacity
+                            style={[styles.taskButton, styles.rejectButton]}
+                            onPress={() => {
+                              onTaskReject?.(task.id)
+                              setIsTasksModalOpen(false)
+                            }}
+                          >
+                            <Text style={styles.taskButtonText}>Отклонить</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[styles.taskButton, styles.acceptButton]}
+                            onPress={() => {
+                              onTaskAccept?.(task.id)
+                              setIsTasksModalOpen(false)
+                            }}
+                          >
+                            <Text style={styles.taskButtonText}>Принять</Text>
+                          </TouchableOpacity>
+                        </>
+                      )}
+                      {task.status === STATUS.ACCEPTED && (
+                        <TouchableOpacity
+                          style={[styles.taskButton, styles.completeButton]}
+                          onPress={() => {
+                            onTaskComplete?.(task.id)
+                            setIsTasksModalOpen(false)
+                          }}
+                        >
+                          <Text style={styles.taskButtonText}>Завершить</Text>
+                        </TouchableOpacity>
+                      )}
+                      {task.status === STATUS.REJECTED && (
+                        <View style={styles.statusContainer}>
+                          <Text style={styles.rejectedText}>Отклонено</Text>
+                        </View>
+                      )}
+                      {task.status === STATUS.COMPLETED && (
+                        <View style={styles.statusContainer}>
+                          <Text style={styles.completedText}>Завершено</Text>
+                        </View>
+                      )}
                     </View>
                   </View>
                 ))
@@ -534,6 +561,25 @@ const styles = StyleSheet.create({
   },
   acceptButton: {
     backgroundColor: "#4CAF50",
+  },
+  completeButton: {
+    backgroundColor: "#2196F3",
+  },
+  statusContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 6,
+  },
+  rejectedText: {
+    fontSize: 10,
+    color: "#f44336",
+    fontWeight: "bold",
+  },
+  completedText: {
+    fontSize: 10,
+    color: "#4CAF50",
+    fontWeight: "bold",
   },
   taskButtonText: {
     color: "white",
