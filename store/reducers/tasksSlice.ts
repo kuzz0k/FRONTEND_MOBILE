@@ -1,4 +1,4 @@
-import { STATUS, TASK } from '@/types/types';
+import { STATUS, TASK, TASK_DOT, TYPE_TO } from '@/types/types';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 
@@ -136,5 +136,11 @@ export const selectTasksCount = (state: RootState) => state.tasks.tasks.length;
 
 export const selectTasksCountByStatus = (status: STATUS) => (state: RootState) =>
   state.tasks.tasks.filter(task => task.status === status).length;
+
+// Селектор для получения только задач с координатами (TO_POINT)
+export const selectPointTasks = (state: RootState) =>
+  state.tasks.tasks.filter((task): task is TASK_DOT => 
+    task.type === TYPE_TO.TO_POINT && 'coordinates' in task
+  );
 
 export default tasksSlice.reducer;

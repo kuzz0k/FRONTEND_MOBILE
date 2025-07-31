@@ -134,6 +134,7 @@ export enum TOPICS_TASKS {
   REJECTED = 'task-rejected',
   COMPLETED = 'task-completed',
   REMOVED = 'task-removed',
+  DELETED = 'task-deleted',
 }
 
 export enum ALL_TOPICS {
@@ -171,6 +172,7 @@ export enum ALL_TOPICS {
   TASK_REJECTED = 'task-rejected',
   TASK_COMPLETED = 'task-completed',
   TASK_REMOVED = 'task-removed',
+  TASK_DELETED = 'task-deleted',
 }
 
 
@@ -417,6 +419,11 @@ export interface TaskCompleted {
 }
 
 export interface TaskRemoved {
+  id: string,
+  assignedTo: string
+}
+
+export interface TaskDeleted {
   id: string,
   assignedTo: string
 }

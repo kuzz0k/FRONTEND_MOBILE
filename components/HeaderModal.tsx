@@ -34,28 +34,6 @@ interface HeaderModalProps {
   isTasksLoading?: boolean
 }
 
-/**
- * HeaderModal overlay component
- * Props:
- *  - isVisible: boolean
- *  - coords: { latitude: number, longitude: number }
- *  - timestamp: Date or string
- *  - onGetRoute: () => void
- *  - onReadyToggle: () => void
- *  - isReady: boolean
- *  - notifications: number
- *  - userName: string
- *  - mapType: 'hybrid' | 'standard' | 'satellite'
- *  - onMapTypeChange: (mapType: 'hybrid' | 'standard' | 'satellite') => void
- *  - onMapSettingsToggle?: (isOpen: boolean) => void
- *  - onLogout?: () => void
- *  - isLocationServiceRunning?: boolean
- *  - locationError?: string | null
- *  - tasks?: TASK[] - array of tasks to display in dropdown
- *  - onTaskAccept?: (taskId: string) => void - handler for accepting task
- *  - onTaskReject?: (taskId: string) => void - handler for rejecting task
- *  - isTasksLoading?: boolean - loading state for tasks
- */
 export default function HeaderModal({
   isVisible,
   coords,

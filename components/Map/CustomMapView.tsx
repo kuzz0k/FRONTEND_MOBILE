@@ -6,7 +6,10 @@ import { MapType } from '../../constants/consts';
 import { RootState } from '../../store/store';
 import { EquipmentLayer } from './Equipments/EquipmentLayer';
 import { MogsLayer } from './Mogs/MogsLayer';
+import TasksLayer from './Tasks/TasksLayer';
 import UserLocationMarker from './UserLocationMarker';
+
+import { TASK_DOT } from '../../types/types';
 
 interface CustomMapViewProps {
   style?: any;
@@ -17,6 +20,7 @@ interface CustomMapViewProps {
   onPress?: (event: any) => void;
   onPanDrag?: (event: any) => void;
   mapRef?: React.RefObject<MapView | null>;
+  onTaskPress?: (task: TASK_DOT) => void;
 }
 
 export default function CustomMapView({
@@ -28,6 +32,7 @@ export default function CustomMapView({
   onPress,
   onPanDrag,
   mapRef,
+  onTaskPress,
 }: CustomMapViewProps) {
   const { mapType, region } = useSelector((state: RootState) => state.map);
   const userLocation = useSelector((state: RootState) => state.userLocation);
@@ -105,6 +110,9 @@ export default function CustomMapView({
         
         {/* Слой с оборудованием */}
         <EquipmentLayer />
+        
+        {/* Слой с задачами */}
+        <TasksLayer onTaskPress={onTaskPress} />
         
         {children}
       </MapView>

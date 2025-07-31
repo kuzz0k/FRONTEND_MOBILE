@@ -6,7 +6,7 @@ import { WebSocketService } from "@/services/WebSocket"
 import { addMog, deleteMog, disconnectMog, setMogs, updateMog } from "@/store/reducers/mogSlice"
 import { setEquipments } from "@/store/reducers/rlsSlice"
 import { addTask, removeTask, setTasks, updateTask, updateTaskStatus } from "@/store/reducers/tasksSlice"
-import { ALL_TOPICS, STATUS } from "@/types/types"
+import { ALL_TOPICS, STATUS, TASK_DOT } from "@/types/types"
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Dimensions, StyleSheet, View } from "react-native"
 import MapView, { Region } from "react-native-maps"
@@ -98,6 +98,10 @@ export default function MainPage() {
     dispatch(removeTask(taskData.id));
   }, [dispatch]);
 
+  const handleTaskDeleted = useCallback((taskData: any) => {
+    dispatch(removeTask(taskData.id));
+  }, [dispatch]);
+
   // const handleMogConnected = useCallback((mogConnectedData) => {
   //   dispatch(updateMog())
   // })
@@ -118,8 +122,9 @@ export default function MainPage() {
     [ALL_TOPICS.TASK_REJECTED]: handleTaskRejected,
     [ALL_TOPICS.TASK_COMPLETED]: handleTaskCompleted,
     [ALL_TOPICS.TASK_REMOVED]: handleTaskRemoved,
+    [ALL_TOPICS.TASK_DELETED]: handleTaskDeleted,
     // [ALL_TOPICS.MOG_CONNECTED]:
-  }), [handleMogQuit, handleMogUpdate, handleMogDisconnected, handleMogEntered, handleTaskCreated, handleTaskEdited, handleTaskImpacted, handleTaskAccepted, handleTaskRejected, handleTaskCompleted, handleTaskRemoved]);
+  }), [handleMogQuit, handleMogUpdate, handleMogDisconnected, handleMogEntered, handleTaskCreated, handleTaskEdited, handleTaskImpacted, handleTaskAccepted, handleTaskRejected, handleTaskCompleted, handleTaskRemoved, handleTaskDeleted]);
 
   useEffect(() => {
     if (!tokenState) return;
@@ -235,6 +240,28 @@ export default function MainPage() {
     }
   }
 
+  // Обработчик нажатия на маркер задачи
+  const handleTaskPress = useCallback((task: TASK_DOT) => {
+    console.log("Нажата задача:", task)
+    
+    // Центрируем карту на задаче
+    const newRegion = {
+      latitude: task.coordinates.lat,
+      longitude: task.coordinates.lng,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    }
+    mapRef.current?.animateToRegion(newRegion, 500)
+    
+    // Обновляем координаты в Redux (для отображения в интерфейсе)
+    dispatch(
+      updateCoordinates({
+        lat: task.coordinates.lat,
+        lng: task.coordinates.lng,
+      })
+    )
+  }, [dispatch])
+
   const zoomIn = () => {
     const newRegion = {
       ...currentRegion,
@@ -297,6 +324,7 @@ export default function MainPage() {
         followsUserLocation={false}
         onPress={handleMapPress}
         mapRef={mapRef}
+        onTaskPress={handleTaskPress}
       ></CustomMapView>
 
       {/* Кнопки зума */}
