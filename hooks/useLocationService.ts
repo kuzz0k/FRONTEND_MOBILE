@@ -3,14 +3,18 @@ import { useSelector } from 'react-redux';
 import { LocationData, locationService } from '../services/LocationService';
 import { RootState } from '../store/store';
 
-export const useLocationService = () => {
+export const useLocationService = (autoStart: boolean = true) => {
   const userLocation = useSelector((state: RootState) => state.userLocation);
   const [localError, setLocalError] = useState<string | null>(null);
 
   // Автоматический запуск сервиса при монтировании компонента
   useEffect(() => {
+    console.log("useLocationService useEffect: autoStart =", autoStart);
+    if (!autoStart) return;
+
     const startService = async () => {
       try {
+        console.log("useLocationService: автоматический запуск GPS");
         const started = await locationService.startLocationUpdates();
         if (!started) {
           setLocalError('Не удалось запустить службу геолокации');
@@ -25,12 +29,14 @@ export const useLocationService = () => {
 
     // Очистка при размонтировании компонента
     return () => {
+      console.log("useLocationService: очистка при размонтировании");
       locationService.stopLocationUpdates();
     };
-  }, []);
+  }, [autoStart]);
 
   const startLocationUpdates = async (): Promise<boolean> => {
     try {
+      console.log("useLocationService.startLocationUpdates: вызван вручную");
       setLocalError(null);
       const started = await locationService.startLocationUpdates();
       if (!started) {
@@ -46,6 +52,7 @@ export const useLocationService = () => {
 
   const stopLocationUpdates = (): void => {
     try {
+      console.log("useLocationService.stopLocationUpdates: вызван");
       locationService.stopLocationUpdates();
       setLocalError(null);
     } catch (error) {
@@ -69,6 +76,16 @@ export const useLocationService = () => {
     }
   };
 
+  const sendManualLocationUpdate = async (coordinates: { latitude: number; longitude: number }): Promise<void> => {
+    try {
+      setLocalError(null);
+      await locationService.sendManualLocationUpdate(coordinates);
+    } catch (error) {
+      console.error('Ошибка при отправке ручного обновления местоположения:', error);
+      setLocalError('Ошибка при отправке местоположения');
+    }
+  };
+
   const currentLocation = userLocation.timestamp > 0 ? {
     latitude: userLocation.latitude,
     longitude: userLocation.longitude,
@@ -86,5 +103,6 @@ export const useLocationService = () => {
     startLocationUpdates,
     stopLocationUpdates,
     getCurrentLocation,
+    sendManualLocationUpdate,
   };
 };

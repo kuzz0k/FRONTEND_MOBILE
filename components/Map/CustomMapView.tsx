@@ -21,6 +21,8 @@ interface CustomMapViewProps {
   onPanDrag?: (event: any) => void;
   mapRef?: React.RefObject<MapView | null>;
   onTaskPress?: (task: TASK_DOT) => void;
+  onUserMarkerDrag?: (coordinate: { latitude: number; longitude: number }) => void;
+  enableUserMarkerDrag?: boolean;
 }
 
 export default function CustomMapView({
@@ -33,6 +35,8 @@ export default function CustomMapView({
   onPanDrag,
   mapRef,
   onTaskPress,
+  onUserMarkerDrag,
+  enableUserMarkerDrag = false,
 }: CustomMapViewProps) {
   const { mapType, region } = useSelector((state: RootState) => state.map);
   const userLocation = useSelector((state: RootState) => state.userLocation);
@@ -86,8 +90,8 @@ export default function CustomMapView({
         )}
         */}
         
-        {/* Маркер текущего местоложения пользователя */}
-        {userLocation.isTracking && userLocation.latitude && userLocation.longitude && (
+        {/* Маркер текущего местоположения пользователя */}
+        {userLocation.latitude && userLocation.longitude && (
           <Marker
             coordinate={{
               latitude: userLocation.latitude,
@@ -97,6 +101,12 @@ export default function CustomMapView({
             description={`Обновлено: ${new Date(userLocation.timestamp).toLocaleTimeString()}`}
             identifier="user-location"
             anchor={{ x: 0.5, y: 0.5 }}
+            draggable={enableUserMarkerDrag}
+            onDragEnd={(e) => {
+              if (onUserMarkerDrag) {
+                onUserMarkerDrag(e.nativeEvent.coordinate);
+              }
+            }}
           >
             <UserLocationMarker 
               size={15} 

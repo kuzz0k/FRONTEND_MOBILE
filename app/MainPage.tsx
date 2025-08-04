@@ -8,7 +8,7 @@ import { setEquipments } from "@/store/reducers/rlsSlice"
 import { addTask, removeTask, setTasks, updateTask, updateTaskStatus } from "@/store/reducers/tasksSlice"
 import { ALL_TOPICS, STATUS, TASK_DOT } from "@/types/types"
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import { Dimensions, StyleSheet, View } from "react-native"
+import { Dimensions, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 import MapView, { Region } from "react-native-maps"
 import CenterOnUserButton from "../components/CenterOnUserButton"
 import HeaderModal from "../components/HeaderModal"
@@ -149,7 +149,13 @@ export default function MainPage() {
   }, [tokenState, eventHandlers]);
 
   const { mapState, changeMapType } = useMap()
-  const { isLocationServiceRunning, locationError } = useLocationService()
+  const { 
+    isLocationServiceRunning, 
+    locationError, 
+    startLocationUpdates, 
+    stopLocationUpdates,
+    sendManualLocationUpdate 
+  } = useLocationService(false) // Отключаем автоматический запуск
 
   const mapRef = useRef<MapView>(null)
 
@@ -162,17 +168,41 @@ export default function MainPage() {
 
   const [notifications] = useState(3)
   const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false)
+  const [isDragMode, setIsDragMode] = useState(false) // Режим перетаскивания
+  const [showMoveConfirmation, setShowMoveConfirmation] = useState(false)
+  const [targetCoordinates, setTargetCoordinates] = useState<{ latitude: number; longitude: number } | null>(null)
+  const isGpsInitialized = useRef(false)
+
+  // Инициализация GPS только при первом запуске
+  useEffect(() => {
+    const initializeGPS = async () => {
+      if (!isGpsInitialized.current) {
+        isGpsInitialized.current = true;
+        console.log("MainPage: инициализация GPS");
+        await startLocationUpdates();
+      }
+    };
+    
+    initializeGPS();
+  }, [startLocationUpdates]); // Запускаем только при изменении функции
 
   const handleMapPress = (event: any) => {
-    // Обновляем координаты точки на экране при нажатии на карту
     if (event.nativeEvent && event.nativeEvent.coordinate) {
       const { latitude, longitude } = event.nativeEvent.coordinate
-      dispatch(
-        updateCoordinates({
-          lat: latitude,
-          lng: longitude,
-        })
-      )
+      
+      if (isDragMode) {
+        // В режиме перетаскивания показываем попап подтверждения
+        setTargetCoordinates({ latitude, longitude })
+        setShowMoveConfirmation(true)
+      } else {
+        // Обычное поведение - обновляем координаты точки на экране
+        dispatch(
+          updateCoordinates({
+            lat: latitude,
+            lng: longitude,
+          })
+        )
+      }
     }
 
     // Закрываем меню настроек карты при нажатии на карту
@@ -292,6 +322,49 @@ export default function MainPage() {
     }
   }
 
+  const handleGpsToggle = async () => {
+    console.log("handleGpsToggle: isDragMode =", isDragMode, "isLocationServiceRunning =", isLocationServiceRunning);
+    
+    if (isDragMode) {
+      // Если в режиме перетаскивания, переключаемся на автоматическое отслеживание
+      console.log("Переключение из DRAG режима в GPS режим");
+      setIsDragMode(false)
+      await startLocationUpdates()
+    } else if (isLocationServiceRunning) {
+      // Если GPS включен, переключаемся в режим перетаскивания
+      console.log("Переключение из GPS режима в DRAG режим");
+      setIsDragMode(true)
+      stopLocationUpdates()
+    } else {
+      // Если GPS выключен, включаем автоматическое отслеживание
+      console.log("Включение GPS режима");
+      setIsDragMode(false)
+      await startLocationUpdates()
+    }
+  }
+
+  const handleUserMarkerDrag = async (coordinate: { latitude: number; longitude: number }) => {
+    console.log("handleUserMarkerDrag: isDragMode =", isDragMode, "coordinate =", coordinate);
+    if (isDragMode) {
+      // Отправляем новые координаты на сервер только в режиме перетаскивания
+      await sendManualLocationUpdate(coordinate)
+    }
+  }
+
+  const handleConfirmMove = async () => {
+    if (targetCoordinates && isDragMode) {
+      console.log("handleConfirmMove: sending coordinates =", targetCoordinates);
+      await sendManualLocationUpdate(targetCoordinates)
+      setShowMoveConfirmation(false)
+      setTargetCoordinates(null)
+    }
+  }
+
+  const handleCancelMove = () => {
+    setShowMoveConfirmation(false)
+    setTargetCoordinates(null)
+  }
+
   return (
     <View style={styles.container}>
       <HeaderModal
@@ -315,6 +388,8 @@ export default function MainPage() {
         onTaskReject={handleTaskReject}
         onTaskComplete={handleTaskComplete}
         isTasksLoading={isTasksLoading}
+        onGpsToggle={handleGpsToggle}
+        isDragMode={isDragMode}
       />
 
       <CustomMapView
@@ -325,6 +400,8 @@ export default function MainPage() {
         onPress={handleMapPress}
         mapRef={mapRef}
         onTaskPress={handleTaskPress}
+        onUserMarkerDrag={handleUserMarkerDrag}
+        enableUserMarkerDrag={isDragMode}
       ></CustomMapView>
 
       {/* Кнопки зума */}
@@ -339,6 +416,37 @@ export default function MainPage() {
           }
         />
       </View>
+
+      {/* Модальное окно подтверждения перемещения */}
+      <Modal
+        transparent={true}
+        visible={showMoveConfirmation}
+        animationType="fade"
+        onRequestClose={handleCancelMove}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Переместить сюда?</Text>
+            <Text style={styles.modalSubtitle}>
+              Ваше местоположение будет обновлено на выбранной точке
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={handleCancelMove}
+              >
+                <Text style={styles.cancelButtonText}>Отмена</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={handleConfirmMove}
+              >
+                <Text style={styles.confirmButtonText}>Переместить</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   )
 }
@@ -355,5 +463,70 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 20,
     bottom: 200,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 12,
+    margin: 20,
+    minWidth: 280,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+    color: '#333',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+    color: '#666',
+    lineHeight: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#f5f5f5',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  confirmButton: {
+    backgroundColor: '#4CAF50',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#666',
+  },
+  confirmButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: 'white',
   },
 })

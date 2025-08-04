@@ -23,8 +23,11 @@ class LocationService {
   private isRunning: boolean = false
   private readonly LOCATION_INTERVAL = 5000 // 5 секунд
   private locationPermissionGranted: boolean = false
+  private instanceId: number
 
   constructor() {
+    this.instanceId = Math.random();
+    console.log("LocationService: создан экземпляр с ID =", this.instanceId);
     this.checkLocationPermission()
   }
 
@@ -80,6 +83,14 @@ class LocationService {
     locationData: LocationData
   ): Promise<void> {
     try {
+      console.log("sendLocationToServer: автоматическая отправка, isRunning =", this.isRunning);
+      
+      // Дополнительная проверка - не отправляем автоматические обновления если сервис остановлен
+      if (!this.isRunning) {
+        console.log("sendLocationToServer: отменено, сервис остановлен");
+        return;
+      }
+      
       // Обновляем Redux store
       store.dispatch(
         updateUserLocation({
@@ -123,6 +134,12 @@ class LocationService {
   }
 
   private async updateLocation(): Promise<void> {
+    console.log(`updateLocation [${this.instanceId}]: автоматическое обновление, isRunning =`, this.isRunning);
+    if (!this.isRunning) {
+      console.log(`updateLocation [${this.instanceId}]: отменено, сервис остановлен`);
+      return;
+    }
+    
     const locationData = await this.getCurrentLocation()
     if (locationData) {
       await this.sendLocationToServer(locationData)
@@ -130,9 +147,18 @@ class LocationService {
   }
 
   public async startLocationUpdates(): Promise<boolean> {
+    console.log(`startLocationUpdates [${this.instanceId}]: вызван, isRunning =`, this.isRunning, "intervalId =", this.intervalId);
+    
     if (this.isRunning) {
-      console.warn("Отправка местоположения уже запущена")
+      console.warn(`startLocationUpdates [${this.instanceId}]: Отправка местоположения уже запущена`)
       return true
+    }
+
+    // Убеждаемся, что предыдущий интервал очищен
+    if (this.intervalId) {
+      console.log(`startLocationUpdates [${this.instanceId}]: очищаем предыдущий интервал`, this.intervalId);
+      clearInterval(this.intervalId);
+      this.intervalId = null;
     }
 
     const hasPermission = await this.checkLocationPermission()
@@ -153,11 +179,13 @@ class LocationService {
       await this.updateLocation()
     }, this.LOCATION_INTERVAL)
 
-    console.log("Периодическая отправка местоположения запущена")
+    console.log("Периодическая отправка местоположения запущена, isRunning =", this.isRunning, "intervalId =", this.intervalId)
     return true
   }
 
   public stopLocationUpdates(): void {
+    console.log("stopLocationUpdates: вызван, isRunning =", this.isRunning, "intervalId =", this.intervalId);
+    
     if (!this.isRunning) {
       console.warn("Отправка местоположения уже остановлена")
       return
@@ -166,11 +194,12 @@ class LocationService {
     if (this.intervalId) {
       clearInterval(this.intervalId)
       this.intervalId = null
+      console.log("stopLocationUpdates: интервал очищен");
     }
 
     this.isRunning = false
     store.dispatch(setTrackingStatus(false))
-    console.log("Периодическая отправка местоположения остановлена")
+    console.log("Периодическая отправка местоположения остановлена, isRunning =", this.isRunning)
   }
 
   public isLocationServiceRunning(): boolean {
@@ -183,29 +212,33 @@ class LocationService {
 
   public async sendReadyStatusUpdate(): Promise<void> {
     try {
+      console.log("sendReadyStatusUpdate: вызван");
+      
       if (!WebSocketService.isConnected) {
         console.warn("WebSocket не подключен, статус готовности не отправлен")
         return
       }
 
-      // Получаем текущее местоположение
-      const locationData = await this.getCurrentLocation()
-      if (!locationData) {
-        console.warn(
-          "Не удалось получить текущее местоположение для отправки статуса готовности"
-        )
+      // Получаем текущее состояние из Redux
+      const state = store.getState()
+      
+      // Используем координаты из Redux store вместо получения новых GPS координат
+      // Это позволяет в режиме drag использовать ручные координаты
+      const userLocation = state.userLocation
+      
+      if (!userLocation.latitude || !userLocation.longitude) {
+        console.warn("Нет координат для отправки статуса готовности")
         return
       }
 
       // Формируем payload в соответствии с типом MogUpdated
-      const state = store.getState()
       const mogUpdatedPayload: MogUpdated = {
         username: state.user.username || "mobile_user", // берем из Redux состояния
         callSign: state.user.callSign || "мобильный", // берем из Redux состояния
         ready: state.user.isReady, // берем из Redux состояния
         coordinates: {
-          lat: locationData.latitude,
-          lng: locationData.longitude,
+          lat: userLocation.latitude,
+          lng: userLocation.longitude,
         },
       }
 
@@ -215,9 +248,60 @@ class LocationService {
       })
 
       WebSocketService.sendMessage(message)
-      // console.log("Статус готовности отправлен:", mogUpdatedPayload)
+      console.log("Статус готовности отправлен с координатами из Redux:", mogUpdatedPayload)
     } catch (error) {
       console.error("Ошибка при отправке статуса готовности:", error)
+    }
+  }
+
+  public async sendManualLocationUpdate(coordinates: { latitude: number; longitude: number }): Promise<void> {
+    try {
+      console.log("sendManualLocationUpdate: sending coordinates =", coordinates);
+      
+      if (!WebSocketService.isConnected) {
+        console.warn("WebSocket не подключен, местоположение не отправлено")
+        return
+      }
+
+      // Обновляем Redux store с новыми координатами
+      console.log("sendManualLocationUpdate: обновляем Redux store");
+      store.dispatch(
+        updateUserLocation({
+          latitude: coordinates.latitude,
+          longitude: coordinates.longitude,
+          timestamp: Date.now(),
+        })
+      )
+
+      // Проверяем, что Redux действительно обновился
+      const updatedState = store.getState();
+      console.log("sendManualLocationUpdate: Redux обновлен, новые координаты =", {
+        lat: updatedState.userLocation.latitude,
+        lng: updatedState.userLocation.longitude,
+        timestamp: updatedState.userLocation.timestamp
+      });
+
+      // Формируем payload в соответствии с типом MogUpdated
+      const mogUpdatedPayload: MogUpdated = {
+        username: updatedState.user.username || "mobile_user",
+        callSign: updatedState.user.callSign || "мобильный",
+        ready: updatedState.user.isReady,
+        coordinates: {
+          lat: coordinates.latitude,
+          lng: coordinates.longitude,
+        },
+      }
+
+      const message = JSON.stringify({
+        topic: TOPICS_MOGS.UPDATED,
+        payload: mogUpdatedPayload,
+      })
+
+      WebSocketService.sendMessage(message)
+      console.log("Ручное обновление местоположения отправлено:", mogUpdatedPayload)
+    } catch (error) {
+      console.error("Ошибка при отправке ручного обновления местоположения:", error)
+      store.dispatch(setLocationError("Ошибка при отправке местоположения"))
     }
   }
 }

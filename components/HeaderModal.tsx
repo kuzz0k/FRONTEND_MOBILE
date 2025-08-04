@@ -32,6 +32,8 @@ interface HeaderModalProps {
   onTaskReject?: (taskId: string) => void
   onTaskComplete?: (taskId: string) => void
   isTasksLoading?: boolean
+  onGpsToggle?: () => void
+  isDragMode?: boolean
 }
 
 export default function HeaderModal({
@@ -52,6 +54,8 @@ export default function HeaderModal({
   onTaskReject,
   onTaskComplete,
   isTasksLoading = false,
+  onGpsToggle,
+  isDragMode = false,
 }: HeaderModalProps) {
   const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
@@ -109,21 +113,25 @@ export default function HeaderModal({
             <Text style={styles.coordsText}>
               {formatCoords(coords.latitude, coords.longitude)}
             </Text>
-            <View style={styles.locationStatusContainer}>
+            <TouchableOpacity 
+              style={styles.locationStatusContainer}
+              onPress={onGpsToggle}
+              activeOpacity={0.7}
+            >
               <View
                 style={[
                   styles.locationStatusIndicator,
                   {
-                    backgroundColor: isLocationServiceRunning
-                      ? "#4CAF50"
-                      : "#f44336",
+                    backgroundColor: isDragMode 
+                      ? "#FF9800" 
+                      : (isLocationServiceRunning ? "#4CAF50" : "#f44336"),
                   },
                 ]}
               />
               <Text style={styles.locationStatusText}>
-                {isLocationServiceRunning ? "GPS" : "GPS OFF"}
+                {isDragMode ? "DRAG" : (isLocationServiceRunning ? "GPS" : "GPS OFF")}
               </Text>
-            </View>
+            </TouchableOpacity>
           </View>
           <Text style={styles.timeText}>{formatTime(timestamp)}</Text>
           {locationError && (
