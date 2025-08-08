@@ -19,6 +19,7 @@ import { useMap } from "../hooks/useMap"
 import { locationService } from "../services/LocationService"
 import { logout, toggleReady } from "../store/reducers/authSlice"
 import { updateCoordinates } from "../store/reducers/coordinatesSlice"
+import { deleteAirCraft, setAirCraftLost, setAirCraftsState, updateAircraftType } from "@/store/reducers/aircraftSlice"
 
 const { width, height } = Dimensions.get("window")
 
@@ -41,6 +42,7 @@ export default function MainPage() {
     if (data) {
       dispatch(setMogs(data.mogs))
       dispatch(setEquipments(data.equipment))
+      dispatch(setAirCraftsState(data.aircrafts))
     }
   }, [isSuccess, data, dispatch])
 
@@ -65,6 +67,18 @@ export default function MainPage() {
 
   const handleMogQuit = useCallback((mogQuitData: any) => {
     dispatch(deleteMog(mogQuitData))
+  }, [dispatch]);
+
+  const handleAirCraftUpdated = useCallback((airCraftData) => {
+    dispatch(updateAircraftType(airCraftData))
+  }, [dispatch]);
+
+  const handleAirCraftDelete = useCallback((airCraftData) => {
+    dispatch(deleteAirCraft(airCraftData))
+  }, [dispatch]);
+
+  const handleAirCraftLost = useCallback((airCraftData) => {
+    dispatch(setAirCraftLost(airCraftData))
   }, [dispatch]);
 
   // Мемоизированные callback для обработки обновлений задач через WEBSOCKET
@@ -114,6 +128,10 @@ export default function MainPage() {
     [ALL_TOPICS.MOG_UPDATED]: handleMogUpdate,
     [ALL_TOPICS.MOG_DISCONNECTED]: handleMogDisconnected,
     [ALL_TOPICS.MOG_ENTERED]: handleMogEntered,
+        // AIRCRAFTS
+    [ALL_TOPICS.AIRCRAFT_UPDATED]: handleAirCraftUpdated,
+    [ALL_TOPICS.AIRCRAFT_DELETED]: handleAirCraftDelete,
+    [ALL_TOPICS.AIRCRAFT_LOST]: handleAirCraftLost,
     // TASKS
     [ALL_TOPICS.TASK_CREATED]: handleTaskCreated,
     [ALL_TOPICS.TASK_EDITED]: handleTaskEdited,
@@ -168,6 +186,8 @@ export default function MainPage() {
 
   const [notifications] = useState(3)
   const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false)
+  const [isTasksModalOpen, setIsTasksModalOpen] = useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isDragMode, setIsDragMode] = useState(false) // Режим перетаскивания
   const [showMoveConfirmation, setShowMoveConfirmation] = useState(false)
   const [targetCoordinates, setTargetCoordinates] = useState<{ latitude: number; longitude: number } | null>(null)
@@ -187,22 +207,30 @@ export default function MainPage() {
   }, [startLocationUpdates]); // Запускаем только при изменении функции
 
   const handleMapPress = (event: any) => {
-    if (event.nativeEvent && event.nativeEvent.coordinate) {
-      const { latitude, longitude } = event.nativeEvent.coordinate
-      
-      if (isDragMode) {
-        // В режиме перетаскивания показываем попап подтверждения
-        setTargetCoordinates({ latitude, longitude })
-        setShowMoveConfirmation(true)
-      } else {
-        // Обычное поведение - обновляем координаты точки на экране
-        dispatch(
-          updateCoordinates({
-            lat: latitude,
-            lng: longitude,
-          })
-        )
-      }
+    // Проверяем, что событие действительно произошло на карте, а не на модальных компонентах
+    if (!event.nativeEvent || !event.nativeEvent.coordinate) {
+      return
+    }
+
+    // Дополнительная проверка - если открыто любое модальное окно, игнорируем клики по карте
+    if (showMoveConfirmation || isMapSettingsOpen || isTasksModalOpen || isUserMenuOpen) {
+      return
+    }
+
+    const { latitude, longitude } = event.nativeEvent.coordinate
+    
+    if (isDragMode) {
+      // В режиме перетаскивания показываем попап подтверждения
+      setTargetCoordinates({ latitude, longitude })
+      setShowMoveConfirmation(true)
+    } else {
+      // Обычное поведение - обновляем координаты точки на экране
+      dispatch(
+        updateCoordinates({
+          lat: latitude,
+          lng: longitude,
+        })
+      )
     }
 
     // Закрываем меню настроек карты при нажатии на карту
@@ -223,6 +251,14 @@ export default function MainPage() {
 
   const handleMapSettingsToggle = (isOpen: boolean) => {
     setIsMapSettingsOpen(isOpen)
+  }
+
+  const handleTasksModalToggle = (isOpen: boolean) => {
+    setIsTasksModalOpen(isOpen)
+  }
+
+  const handleUserMenuToggle = (isOpen: boolean) => {
+    setIsUserMenuOpen(isOpen)
   }
 
   const handleLogout = async () => {
@@ -390,6 +426,8 @@ export default function MainPage() {
         isTasksLoading={isTasksLoading}
         onGpsToggle={handleGpsToggle}
         isDragMode={isDragMode}
+        onTasksModalToggle={handleTasksModalToggle}
+        onUserMenuToggle={handleUserMenuToggle}
       />
 
       <CustomMapView

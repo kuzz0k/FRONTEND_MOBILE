@@ -43,18 +43,20 @@ export type EquipmentType = {
 }
 
 export type AircraftType = {
-  id: string,
+  aircraftId: string,
   detectedBy: string,
-  type: TYPE,
-  coordinates: Coordinates,
-  cource: number,
+  type: string,
+  coordinates: Coordinates[],
+  course: number,
   heightInMeters: number,
   speedInMeters: number,
   position: {
     azimuth: number,
     distanceInMeters: number,
-    refpointId: string
-  }
+    refPoint: Coordinates
+  },
+  tracked: boolean,
+  lastDetected: number,
 }
 
 export type Coordinates = {

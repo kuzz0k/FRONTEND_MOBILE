@@ -13,6 +13,7 @@ import reperDotReducer from "./reducers/reperDotSlice"
 import equipmentReducer from "./reducers/rlsSlice"
 import tasksReducer from "./reducers/tasksSlice"
 import userLocationReducer from "./reducers/userLocationSlice"
+import airCraftsReducer from "./reducers/aircraftSlice"
 
 export const store = configureStore({
   reducer: {
@@ -27,6 +28,7 @@ export const store = configureStore({
     tasks: tasksReducer,
     userLocation: userLocationReducer,
     apiQuery: api.reducer,
+    airCrafts: airCraftsReducer,
     [globalState.reducerPath]: globalState.reducer,
     [tasksApi.reducerPath]: tasksApi.reducer
   },

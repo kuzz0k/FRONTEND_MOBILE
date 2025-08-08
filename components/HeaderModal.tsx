@@ -34,6 +34,8 @@ interface HeaderModalProps {
   isTasksLoading?: boolean
   onGpsToggle?: () => void
   isDragMode?: boolean
+  onTasksModalToggle?: (isOpen: boolean) => void
+  onUserMenuToggle?: (isOpen: boolean) => void
 }
 
 export default function HeaderModal({
@@ -56,6 +58,8 @@ export default function HeaderModal({
   isTasksLoading = false,
   onGpsToggle,
   isDragMode = false,
+  onTasksModalToggle,
+  onUserMenuToggle,
 }: HeaderModalProps) {
   const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
@@ -95,10 +99,13 @@ export default function HeaderModal({
   const toggleUserMenu = () => {
     const newState = !isUserMenuOpen
     setIsUserMenuOpen(newState)
+    onUserMenuToggle?.(newState)
   }
 
   const toggleTasksModal = () => {
-    setIsTasksModalOpen(!isTasksModalOpen)
+    const newState = !isTasksModalOpen
+    setIsTasksModalOpen(newState)
+    onTasksModalToggle?.(newState)
   }
 
   const handleTasksPress = () => {
@@ -107,7 +114,12 @@ export default function HeaderModal({
 
   return isVisible ? (
     <View style={styles.modalContainer} pointerEvents="box-none">
-      <View style={styles.container}>
+      <View 
+        style={styles.container} 
+        pointerEvents="auto"
+        onStartShouldSetResponder={() => true}
+        onTouchEnd={(e) => e.stopPropagation()}
+      >
         <View style={styles.coordsBlock}>
           <View style={styles.coordsRow}>
             <Text style={styles.coordsText}>
@@ -181,7 +193,11 @@ export default function HeaderModal({
 
       {/* Выпадающее меню настроек карты */}
       {isMapSettingsOpen && (
-        <View style={styles.mapSettingsDropdown}>
+        <View 
+          style={styles.mapSettingsDropdown}
+          onStartShouldSetResponder={() => true}
+          onTouchEnd={(e) => e.stopPropagation()}
+        >
           {Object.entries(mapTypeLabels).map(([type, label]) => (
             <TouchableOpacity
               key={type}
@@ -211,12 +227,17 @@ export default function HeaderModal({
 
       {/* Выпадающее меню пользователя */}
       {isUserMenuOpen && (
-        <View style={styles.userMenuDropdown}>
+        <View 
+          style={styles.userMenuDropdown}
+          onStartShouldSetResponder={() => true}
+          onTouchEnd={(e) => e.stopPropagation()}
+        >
           <TouchableOpacity
             style={styles.userMenuOption}
             onPress={() => {
               onLogout?.()
               setIsUserMenuOpen(false)
+              onUserMenuToggle?.(false)
             }}
           >
             <Icon name="log-out" size={16} color="#f44336" />
@@ -227,7 +248,12 @@ export default function HeaderModal({
 
       {/* Tasks Modal */}
       {isTasksModalOpen && (
-        <View style={styles.tasksDropdown} pointerEvents="auto">
+        <View 
+          style={styles.tasksDropdown} 
+          pointerEvents="auto"
+          onStartShouldSetResponder={() => true}
+          onTouchEnd={(e) => e.stopPropagation()}
+        >
           <View style={styles.tasksContainer}>
             <Text style={styles.tasksTitle}>Задачи</Text>
             <ScrollView 
@@ -257,6 +283,7 @@ export default function HeaderModal({
                             onPress={() => {
                               onTaskReject?.(task.id)
                               setIsTasksModalOpen(false)
+                              onTasksModalToggle?.(false)
                             }}
                           >
                             <Text style={styles.taskButtonText}>Отклонить</Text>
@@ -266,6 +293,7 @@ export default function HeaderModal({
                             onPress={() => {
                               onTaskAccept?.(task.id)
                               setIsTasksModalOpen(false)
+                              onTasksModalToggle?.(false)
                             }}
                           >
                             <Text style={styles.taskButtonText}>Принять</Text>
@@ -278,6 +306,7 @@ export default function HeaderModal({
                           onPress={() => {
                             onTaskComplete?.(task.id)
                             setIsTasksModalOpen(false)
+                            onTasksModalToggle?.(false)
                           }}
                         >
                           <Text style={styles.taskButtonText}>Завершить</Text>
@@ -300,7 +329,10 @@ export default function HeaderModal({
             </ScrollView>
             <TouchableOpacity
               style={styles.closeTasksButton}
-              onPress={() => setIsTasksModalOpen(false)}
+              onPress={() => {
+                setIsTasksModalOpen(false)
+                onTasksModalToggle?.(false)
+              }}
             >
               <Text style={styles.closeTasksText}>Закрыть</Text>
             </TouchableOpacity>

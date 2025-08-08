@@ -10,6 +10,7 @@ import TasksLayer from './Tasks/TasksLayer';
 import UserLocationMarker from './UserLocationMarker';
 
 import { TASK_DOT } from '../../types/types';
+import { AirCraftsLayer } from './Aircrafts/AircraftLayer';
 
 interface CustomMapViewProps {
   style?: any;
@@ -118,6 +119,9 @@ export default function CustomMapView({
         {/* Слой с мобильными операторами (Mogs) */}
         <MogsLayer />
         
+        {/* Слой с дронами */}
+        <AirCraftsLayer/>
+
         {/* Слой с оборудованием */}
         <EquipmentLayer />
         
