@@ -66,7 +66,14 @@ export const AirCraftsMarker: FC<AirCraftsMarkerProps> = ({ data }) => {
           pinColor={classificationData.color}
           onPress={handleClick}
           title={`✈️ ${classificationData.name}`}
-          description={`${data.aircraftId} | Курс: ${data.course || 'N/A'}° | Высота: ${data.heightInMeters || 'N/A'}м | Скорость: ${data.speedInMeters || 'N/A'}м/с`}
+          description={
+            `${data.aircraftId} | ` +
+            `Курс: ${data.course ?? 'N/A'}° | ` +
+            `Высота: ${data.heightInMeters ?? 'N/A'}м | ` +
+            `Скорость: ${data.speedInMeters ?? 'N/A'}м/с | ` +
+            // Добавляем последние координаты с веб-сокета
+            `Коорд: ${currentPosition.latitude.toFixed(5)}, ${currentPosition.longitude.toFixed(5)}`
+          }
         />
       )}
 
