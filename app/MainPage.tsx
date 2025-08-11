@@ -3,12 +3,13 @@ import { api, useLogoutMutation } from "@/services/auth"
 import { useGetGlobalStateQuery } from "@/services/globalState"
 import { tasksApi, useAcceptTaskMutation, useCompleteTaskMutation, useGetTasksQuery, useRejectTaskMutation } from "@/services/tasks"
 import { WebSocketService } from "@/services/WebSocket"
+import { deleteAirCraft, setAirCraftLost, setAirCraftsState, updateAircraftType } from "@/store/reducers/aircraftSlice"
 import { addMog, deleteMog, disconnectMog, setMogs, updateMog } from "@/store/reducers/mogSlice"
 import { setEquipments } from "@/store/reducers/rlsSlice"
 import { addTask, removeTask, setTasks, updateTask, updateTaskStatus } from "@/store/reducers/tasksSlice"
 import { ALL_TOPICS, STATUS, TASK_DOT } from "@/types/types"
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import { Dimensions, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native"
+import { Dimensions, StyleSheet, View } from "react-native"
 import MapView, { Region } from "react-native-maps"
 import CenterOnUserButton from "../components/CenterOnUserButton"
 import HeaderModal from "../components/HeaderModal"
@@ -19,7 +20,6 @@ import { useMap } from "../hooks/useMap"
 import { locationService } from "../services/LocationService"
 import { logout, toggleReady } from "../store/reducers/authSlice"
 import { updateCoordinates } from "../store/reducers/coordinatesSlice"
-import { deleteAirCraft, setAirCraftLost, setAirCraftsState, updateAircraftType } from "@/store/reducers/aircraftSlice"
 
 const { width, height } = Dimensions.get("window")
 
@@ -69,15 +69,15 @@ export default function MainPage() {
     dispatch(deleteMog(mogQuitData))
   }, [dispatch]);
 
-  const handleAirCraftUpdated = useCallback((airCraftData) => {
+  const handleAirCraftUpdated = useCallback((airCraftData: any) => {
     dispatch(updateAircraftType(airCraftData))
   }, [dispatch]);
 
-  const handleAirCraftDelete = useCallback((airCraftData) => {
+  const handleAirCraftDelete = useCallback((airCraftData: any) => {
     dispatch(deleteAirCraft(airCraftData))
   }, [dispatch]);
 
-  const handleAirCraftLost = useCallback((airCraftData) => {
+  const handleAirCraftLost = useCallback((airCraftData: any) => {
     dispatch(setAirCraftLost(airCraftData))
   }, [dispatch]);
 
@@ -142,7 +142,7 @@ export default function MainPage() {
     [ALL_TOPICS.TASK_REMOVED]: handleTaskRemoved,
     [ALL_TOPICS.TASK_DELETED]: handleTaskDeleted,
     // [ALL_TOPICS.MOG_CONNECTED]:
-  }), [handleMogQuit, handleMogUpdate, handleMogDisconnected, handleMogEntered, handleTaskCreated, handleTaskEdited, handleTaskImpacted, handleTaskAccepted, handleTaskRejected, handleTaskCompleted, handleTaskRemoved, handleTaskDeleted]);
+  }), [handleMogQuit, handleMogUpdate, handleMogDisconnected, handleMogEntered, handleAirCraftUpdated, handleAirCraftDelete, handleAirCraftLost, handleTaskCreated, handleTaskEdited, handleTaskImpacted, handleTaskAccepted, handleTaskRejected, handleTaskCompleted, handleTaskRemoved, handleTaskDeleted]);
 
   useEffect(() => {
     if (!tokenState) return;
@@ -189,7 +189,7 @@ export default function MainPage() {
   const [isTasksModalOpen, setIsTasksModalOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isDragMode, setIsDragMode] = useState(false) // Режим перетаскивания
-  const [showMoveConfirmation, setShowMoveConfirmation] = useState(false)
+  const [, setShowMoveConfirmation] = useState(false)
   const [targetCoordinates, setTargetCoordinates] = useState<{ latitude: number; longitude: number } | null>(null)
   const isGpsInitialized = useRef(false)
 
@@ -213,7 +213,7 @@ export default function MainPage() {
     }
 
     // Дополнительная проверка - если открыто любое модальное окно, игнорируем клики по карте
-    if (showMoveConfirmation || isMapSettingsOpen || isTasksModalOpen || isUserMenuOpen) {
+    if (isMapSettingsOpen || isTasksModalOpen || isUserMenuOpen) {
       return
     }
 
@@ -440,6 +440,9 @@ export default function MainPage() {
         onTaskPress={handleTaskPress}
         onUserMarkerDrag={handleUserMarkerDrag}
         enableUserMarkerDrag={isDragMode}
+        targetCoordinates={targetCoordinates}
+        onConfirmMove={handleConfirmMove}
+        onCancelMove={handleCancelMove}
       ></CustomMapView>
 
       {/* Кнопки зума */}
@@ -454,37 +457,6 @@ export default function MainPage() {
           }
         />
       </View>
-
-      {/* Модальное окно подтверждения перемещения */}
-      <Modal
-        transparent={true}
-        visible={showMoveConfirmation}
-        animationType="fade"
-        onRequestClose={handleCancelMove}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Переместить сюда?</Text>
-            <Text style={styles.modalSubtitle}>
-              Ваше местоположение будет обновлено на выбранной точке
-            </Text>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={handleCancelMove}
-              >
-                <Text style={styles.cancelButtonText}>Отмена</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.confirmButton]}
-                onPress={handleConfirmMove}
-              >
-                <Text style={styles.confirmButtonText}>Переместить</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   )
 }
@@ -501,70 +473,5 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 20,
     bottom: 200,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 12,
-    margin: 20,
-    minWidth: 280,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 8,
-    color: '#333',
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 20,
-    color: '#666',
-    lineHeight: 20,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#f5f5f5',
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  confirmButton: {
-    backgroundColor: '#4CAF50',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#666',
-  },
-  confirmButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: 'white',
   },
 })
