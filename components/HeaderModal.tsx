@@ -175,15 +175,6 @@ export default function HeaderModal({
             <Icon name="map" size={20} color="#333" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.notificationButton}>
-            <Icon name="message-circle" size={20} color="#333" />
-            {notifications > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{notifications}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-
           <TouchableOpacity style={styles.userButton} onPress={toggleUserMenu}>
             <Icon name="user" size={20} color="#333" />
             <Text style={styles.userText}>{userName}</Text>

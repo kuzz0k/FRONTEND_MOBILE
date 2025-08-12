@@ -6,7 +6,7 @@ import { MapType } from "../../constants/consts"
 import { RootState } from "../../store/store"
 import ConfirmLocationMarker from "./ConfirmLocationMarker"
 import ConfirmLocationOverlayComp from "./ConfirmLocationOverlay"
-import { EquipmentLayer } from "./Equipments/EquipmentLayer"
+// import { EquipmentLayer } from "./Equipments/EquipmentLayer"
 import { MogsLayer } from "./Mogs/MogsLayer"
 import TasksLayer from "./Tasks/TasksLayer"
 import UserLocationMarker from "./UserLocationMarker"
@@ -145,7 +145,7 @@ export default function CustomMapView({
         <AirCraftsLayer />
 
         {/* Слой с оборудованием */}
-        <EquipmentLayer />
+        {/* <EquipmentLayer /> */}
 
         {/* Слой с задачами */}
         <TasksLayer onTaskPress={onTaskPress} />
