@@ -6,13 +6,17 @@ import { MapType } from "../../constants/consts"
 import { RootState } from "../../store/store"
 import ConfirmLocationMarker from "./ConfirmLocationMarker"
 import ConfirmLocationOverlayComp from "./ConfirmLocationOverlay"
-// import { EquipmentLayer } from "./Equipments/EquipmentLayer"
 import { MogsLayer } from "./Mogs/MogsLayer"
 import TasksLayer from "./Tasks/TasksLayer"
 import UserLocationMarker from "./UserLocationMarker"
 
 import { TASK_DOT } from "../../types/types"
 import { AirCraftsLayer } from "./Aircrafts/AircraftLayer"
+import WebFallbackMapView, { WebFallbackHandle } from './WebFallbackMapView'
+
+// Флаг для поэтапной миграции. true -> использовать web fallback вместо native.
+// Дальше можно связать с ENV (EXPO_PUBLIC_USE_WEB_MAP) или настройками.
+const USE_WEB_FALLBACK = true
 
 interface CustomMapViewProps {
   style?: any
@@ -23,6 +27,7 @@ interface CustomMapViewProps {
   onPress?: (event: any) => void
   onPanDrag?: (event: any) => void
   mapRef?: React.RefObject<MapView | null>
+  webMapRef?: React.RefObject<WebFallbackHandle | null>
   onTaskPress?: (task: TASK_DOT) => void
   onUserMarkerDrag?: (coordinate: {
     latitude: number
@@ -43,6 +48,7 @@ export default function CustomMapView({
   onPress,
   onPanDrag,
   mapRef,
+  webMapRef,
   onTaskPress,
   onUserMarkerDrag,
   enableUserMarkerDrag = false,
@@ -53,8 +59,6 @@ export default function CustomMapView({
   const { mapType, region } = useSelector((state: RootState) => state.map)
   const userLocation = useSelector((state: RootState) => state.userLocation)
 
-  // Для react-native-maps мы можем использовать кастомные тайлы только с UrlTile
-  // Но это работает только на Android, для iOS нужно использовать встроенные типы
   const getMapTypeForNativeMaps = (type: MapType) => {
     switch (type) {
       case "satellite":
@@ -65,6 +69,21 @@ export default function CustomMapView({
       default:
         return "standard"
     }
+  }
+
+  if (USE_WEB_FALLBACK) {
+    return (
+      <WebFallbackMapView
+        ref={webMapRef as any}
+        style={style}
+        onPress={onPress}
+        onTaskPress={onTaskPress}
+  targetCoordinates={targetCoordinates}
+  onConfirmMove={onConfirmMove}
+  onCancelMove={onCancelMove}
+  isDragMode={enableUserMarkerDrag}
+      />
+    )
   }
 
   return (
@@ -90,19 +109,6 @@ export default function CustomMapView({
         onPress={onPress}
         onPanDrag={onPanDrag}
       >
-        {/* Если нужны кастомные тайлы (только Android), можно добавить: */}
-        {/* 
-        {Platform.OS === 'android' && (
-          <UrlTile
-            urlTemplate={mapLayers[mapType]}
-            shouldReplaceMapContent={true}
-            maximumZ={19}
-            flipY={false}
-          />
-        )}
-        */}
-
-        {/* Маркер текущего местоположения пользователя */}
         {userLocation.latitude && userLocation.longitude && (
           <Marker
             coordinate={{
@@ -126,7 +132,6 @@ export default function CustomMapView({
           </Marker>
         )}
 
-        {/* Маркер подтверждения перемещения */}
         {targetCoordinates && (
           <Marker
             coordinate={targetCoordinates}
@@ -138,26 +143,17 @@ export default function CustomMapView({
           </Marker>
         )}
 
-        {/* Слой с мобильными операторами (Mogs) */}
         <MogsLayer />
-
-        {/* Слой с дронами */}
         <AirCraftsLayer />
-
-        {/* Слой с оборудованием */}
-        {/* <EquipmentLayer /> */}
-
-        {/* Слой с задачами */}
         <TasksLayer onTaskPress={onTaskPress} />
-
         {children}
       </MapView>
       {targetCoordinates && onConfirmMove && onCancelMove && mapRef && (
         <ConfirmLocationOverlayComp
           mapRef={mapRef}
           coordinate={targetCoordinates}
-          onConfirm={onConfirmMove}
-          onCancel={onCancelMove}
+            onConfirm={onConfirmMove}
+            onCancel={onCancelMove}
         />
       )}
     </View>

@@ -1,7 +1,6 @@
 import { useAppSelector } from "@/hooks/redux";
 import React, { useState } from "react";
 import {
-  Dimensions,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,10 +8,9 @@ import {
   View,
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather"; // or appropriate icon library
-import { MAP_LABELS } from "../constants/consts";
 import { STATUS, TYPE_TO } from "../types/types";
 
-const { width } = Dimensions.get("window")
+// Full-width header: no need to calculate window width manually
 
 interface HeaderModalProps {
   isVisible: boolean
@@ -61,7 +59,7 @@ export default function HeaderModal({
   onTasksModalToggle,
   onUserMenuToggle,
 }: HeaderModalProps) {
-  const [isMapSettingsOpen, setIsMapSettingsOpen] = useState(false)
+  // isMapSettingsOpen removed (подложка отключена)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isTasksModalOpen, setIsTasksModalOpen] = useState(false)
   const tasks = useAppSelector(state => state.tasks.tasks)
@@ -80,21 +78,7 @@ export default function HeaderModal({
     )}.${pad(d.getMonth() + 1)}.${d.getFullYear().toString().slice(-2)}`
   }
 
-  const mapTypeLabels = MAP_LABELS
-
-  const handleMapTypeSelect = (
-    selectedMapType: "hybrid" | "standard" | "satellite"
-  ) => {
-    onMapTypeChange(selectedMapType)
-    setIsMapSettingsOpen(false)
-    onMapSettingsToggle?.(false)
-  }
-
-  const toggleMapSettings = () => {
-    const newState = !isMapSettingsOpen
-    setIsMapSettingsOpen(newState)
-    onMapSettingsToggle?.(newState)
-  }
+  // Логика смены подложки отключена
 
   const toggleUserMenu = () => {
     const newState = !isUserMenuOpen
@@ -121,30 +105,9 @@ export default function HeaderModal({
         onTouchEnd={(e) => e.stopPropagation()}
       >
         <View style={styles.coordsBlock}>
-          <View style={styles.coordsRow}>
-            <Text style={styles.coordsText}>
-              {formatCoords(coords.latitude, coords.longitude)}
-            </Text>
-            <TouchableOpacity 
-              style={styles.locationStatusContainer}
-              onPress={onGpsToggle}
-              activeOpacity={0.7}
-            >
-              <View
-                style={[
-                  styles.locationStatusIndicator,
-                  {
-                    backgroundColor: isDragMode 
-                      ? "#FF9800" 
-                      : (isLocationServiceRunning ? "#4CAF50" : "#f44336"),
-                  },
-                ]}
-              />
-              <Text style={styles.locationStatusText}>
-                {isDragMode ? "DRAG" : (isLocationServiceRunning ? "GPS" : "GPS OFF")}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.coordsText} numberOfLines={1}>
+            {formatCoords(coords.latitude, coords.longitude)}
+          </Text>
           <Text style={styles.timeText}>{formatTime(timestamp)}</Text>
           {locationError && (
             <Text style={styles.errorText}>{locationError}</Text>
@@ -157,6 +120,14 @@ export default function HeaderModal({
           >
             <Text style={styles.routeText}>Задачи</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.gpsButton}
+            onPress={onGpsToggle}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.gpsIndicator, { backgroundColor: isDragMode ? '#FF9800' : (isLocationServiceRunning ? '#4CAF50' : '#f44336') }]} />
+            <Icon name={isDragMode ? 'move' : (isLocationServiceRunning ? 'navigation' : 'slash')} size={16} color="#333" />
+          </TouchableOpacity>
           <TouchableOpacity onPress={onReadyToggle} style={styles.statusButton}>
             <Icon
               name={isReady ? "check-circle" : "circle"}
@@ -168,12 +139,7 @@ export default function HeaderModal({
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.mapSettingsButton}
-            onPress={toggleMapSettings}
-          >
-            <Icon name="map" size={20} color="#333" />
-          </TouchableOpacity>
+          {/* Кнопка смены подложки убрана по требованию */}
 
           <TouchableOpacity style={styles.userButton} onPress={toggleUserMenu}>
             <Icon name="user" size={20} color="#333" />
@@ -183,38 +149,7 @@ export default function HeaderModal({
       </View>
 
       {/* Выпадающее меню настроек карты */}
-      {isMapSettingsOpen && (
-        <View 
-          style={styles.mapSettingsDropdown}
-          onStartShouldSetResponder={() => true}
-          onTouchEnd={(e) => e.stopPropagation()}
-        >
-          {Object.entries(mapTypeLabels).map(([type, label]) => (
-            <TouchableOpacity
-              key={type}
-              style={[
-                styles.mapTypeOption,
-                mapType === type && styles.mapTypeOptionSelected,
-              ]}
-              onPress={() =>
-                handleMapTypeSelect(type as "hybrid" | "standard" | "satellite")
-              }
-            >
-              <Text
-                style={[
-                  styles.mapTypeText,
-                  mapType === type && styles.mapTypeTextSelected,
-                ]}
-              >
-                {label}
-              </Text>
-              {mapType === type && (
-                <Icon name="check" size={16} color="#4CAF50" />
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
+  {/* Выпадающее меню смены подложки отключено */}
 
       {/* Выпадающее меню пользователя */}
       {isUserMenuOpen && (
@@ -346,12 +281,14 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "white",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    elevation: 4,
-    width: width - 24,
+  backgroundColor: "white",
+  paddingVertical: 6,
+  paddingHorizontal: 10,
+  borderBottomLeftRadius: 8,
+  borderBottomRightRadius: 8,
+  elevation: 4,
+  width: '100%',
+  minHeight: 52,
   },
   coordsBlock: {
     flex: 2,
@@ -473,6 +410,22 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "bold",
     color: "#333",
+  },
+  gpsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: '#f2f2f2',
+    marginRight: 8,
+  },
+  gpsIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 4,
   },
   errorText: {
     fontSize: 10,

@@ -18,7 +18,7 @@ export type MapType = 'hybrid' | 'standard' | 'satellite';
 export const MAP_PROVIDERS = {
     GOOGLE: {
         hybrid: "http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}",
-        satellite: "https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+        satellite: "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
         standard: "https://{s}.google.com/vt/lyrs=m&hl=ru&x={x}&y={y}&z={z}"
     },
     // Стилизованная схема как в вашем веб-проекте

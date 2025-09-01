@@ -15,7 +15,7 @@ export interface AppSettingsState {
 const initialState: AppSettingsState = {
   mapType: "hybrid",
   network: {
-    ip: "192.168.31.27",
+    ip: "91.204.178.227",
     port: "8000"
   }
 };

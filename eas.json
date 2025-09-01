@@ -13,8 +13,7 @@
     },
     "production": {
       "android": {
-        "buildType": "apk",
-        "artifactPath": "./downloads/KOCHEVNIK-${1.0.0}.apk"
+        "buildType": "apk"
       },
       "autoIncrement": true
     }

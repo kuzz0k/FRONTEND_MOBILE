@@ -9,11 +9,12 @@ import { setEquipments } from "@/store/reducers/rlsSlice"
 import { addTask, removeTask, setTasks, updateTask, updateTaskStatus } from "@/store/reducers/tasksSlice"
 import { ALL_TOPICS, STATUS, TASK_DOT } from "@/types/types"
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import { Dimensions, StyleSheet, View } from "react-native"
+import { StyleSheet, View } from "react-native"
 import MapView, { Region } from "react-native-maps"
 import CenterOnUserButton from "../components/CenterOnUserButton"
 import HeaderModal from "../components/HeaderModal"
 import CustomMapView from "../components/Map/CustomMapView"
+import { WebFallbackHandle } from "../components/Map/WebFallbackMapView"
 import ZoomControls from "../components/ui/ZoomControls"
 import { useLocationService } from "../hooks/useLocationService"
 import { useMap } from "../hooks/useMap"
@@ -21,7 +22,7 @@ import { locationService } from "../services/LocationService"
 import { logout, toggleReady } from "../store/reducers/authSlice"
 import { updateCoordinates } from "../store/reducers/coordinatesSlice"
 
-const { width, height } = Dimensions.get("window")
+// Dimensions no longer needed; map uses flex:1
 
 export default function MainPage() {
   const tokenState = useAppSelector((state) => state.user.accessToken)
@@ -176,6 +177,7 @@ export default function MainPage() {
   } = useLocationService(false) // Отключаем автоматический запуск
 
   const mapRef = useRef<MapView>(null)
+  const webMapRef = useRef<WebFallbackHandle | null>(null)
 
   const [currentRegion, setCurrentRegion] = useState<Region>({
     latitude: 0, // Москва
@@ -329,6 +331,10 @@ export default function MainPage() {
   }, [dispatch])
 
   const zoomIn = () => {
+    if (webMapRef.current) {
+      webMapRef.current.zoomIn()
+      return
+    }
     const newRegion = {
       ...currentRegion,
       latitudeDelta: currentRegion.latitudeDelta / 2,
@@ -338,6 +344,10 @@ export default function MainPage() {
   }
 
   const zoomOut = () => {
+    if (webMapRef.current) {
+      webMapRef.current.zoomOut()
+      return
+    }
     const newRegion = {
       ...currentRegion,
       latitudeDelta: currentRegion.latitudeDelta * 2,
@@ -437,6 +447,7 @@ export default function MainPage() {
         followsUserLocation={false}
         onPress={handleMapPress}
         mapRef={mapRef}
+        webMapRef={webMapRef}
         onTaskPress={handleTaskPress}
         onUserMarkerDrag={handleUserMarkerDrag}
         enableUserMarkerDrag={isDragMode}
@@ -466,8 +477,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   map: {
-    width: width,
-    height: height,
+  flex: 1,
   },
   centerOnUserContainer: {
     position: "absolute",
