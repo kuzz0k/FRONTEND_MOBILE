@@ -11,7 +11,6 @@ import { ALL_TOPICS, STATUS, TASK_DOT } from "@/types/types"
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { StyleSheet, View } from "react-native"
 import MapView, { Region } from "react-native-maps"
-import CenterOnUserButton from "../components/CenterOnUserButton"
 import HeaderModal from "../components/HeaderModal"
 import CustomMapView from "../components/Map/CustomMapView"
 import { WebFallbackHandle } from "../components/Map/WebFallbackMapView"
@@ -472,15 +471,6 @@ export default function MainPage() {
       {/* Кнопки зума */}
       <ZoomControls onZoomIn={zoomIn} onZoomOut={zoomOut} />
 
-      {/* Кнопка центрирования на пользователе */}
-      <View style={styles.centerOnUserContainer}>
-        <CenterOnUserButton
-          onPress={centerOnUser}
-          isLocationAvailable={
-            userLocation.isTracking && !!userLocation.latitude
-          }
-        />
-      </View>
     </View>
   )
 }
