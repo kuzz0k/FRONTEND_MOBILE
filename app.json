@@ -31,7 +31,9 @@
       },
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
       "package": "com.wqbalance.FRONTEND_MOBILE"
     },
@@ -41,6 +43,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "./app.plugin.js",
       "expo-router",
       [
         "expo-location",
@@ -70,8 +73,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "7b21fd08-80f5-49d1-89dd-597f8b6cf3ff"
+        "projectId": "149c2556-fa15-4458-905f-4de68b7a4e80"
       }
-    }
+    },
+    "owner": "kuzz0k"
   }
 }

@@ -178,6 +178,8 @@ export default function MainPage() {
 
   const mapRef = useRef<MapView>(null)
   const webMapRef = useRef<WebFallbackHandle | null>(null)
+  // Флаг для игнорирования "проскальзывающего" нажатия по карте после закрытия окна задач
+  const ignoreNextMapPressRef = useRef(false)
 
   const [currentRegion, setCurrentRegion] = useState<Region>({
     latitude: 0, // Москва
@@ -211,6 +213,12 @@ export default function MainPage() {
   const handleMapPress = (event: any) => {
     // Проверяем, что событие действительно произошло на карте, а не на модальных компонентах
     if (!event.nativeEvent || !event.nativeEvent.coordinate) {
+      return
+    }
+
+    // Игнорируем первое нажатие, которое может "проскочить" сразу после закрытия модалки задач
+    if (ignoreNextMapPressRef.current) {
+      ignoreNextMapPressRef.current = false
       return
     }
 
@@ -257,6 +265,11 @@ export default function MainPage() {
 
   const handleTasksModalToggle = (isOpen: boolean) => {
     setIsTasksModalOpen(isOpen)
+    if (!isOpen) {
+      // На короткое время игнорируем следующее нажатие по карте (закрывающий тап)
+      ignoreNextMapPressRef.current = true
+      setTimeout(() => { ignoreNextMapPressRef.current = false }, 300)
+    }
   }
 
   const handleUserMenuToggle = (isOpen: boolean) => {

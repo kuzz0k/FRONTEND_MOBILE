@@ -58,9 +58,15 @@ export const userSlice = createSlice({
     toggleReady: (state) => {
       state.isReady = !state.isReady
     },
+    updateTokens: (state, action: PayloadAction<{ access_token: string; refresh_token: string }>) => {
+      state.accessToken = action.payload.access_token
+      state.refreshToken = action.payload.refresh_token
+      AsyncStorage.setItem("accessToken", action.payload.access_token)
+      AsyncStorage.setItem("refreshToken", action.payload.refresh_token)
+    }
   },
 })
 
-export const { login, logout, toggleReady } = userSlice.actions
+export const { login, logout, toggleReady, updateTokens } = userSlice.actions
 
 export default userSlice.reducer

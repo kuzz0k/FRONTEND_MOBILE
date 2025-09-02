@@ -6,27 +6,11 @@ import {
   setTasks,
   updateTaskStatus as updateTaskStatusInSlice,
 } from "@/store/reducers/tasksSlice"
-import { RootState } from "@/store/store"
 import { STATUS, TASK } from "@/types/types"
-import { getToken } from "@/utils/globals"
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react"
+import { createApi } from "@reduxjs/toolkit/query/react"
+import { buildDynamicBaseQueryWithReauth } from "./baseQueryWithReauth"
 
-const dynamicBaseQuery = fetchBaseQuery({
-  baseUrl: "/",
-})
-
-const customBaseQuery = (args: any, api: any, extraOptions: any) => {
-  const state = api.getState() as RootState
-  const baseUrl = selectBaseUrl(state)
-
-  if (typeof args === "string") {
-    args = { url: baseUrl + args }
-  } else if (typeof args === "object" && args.url) {
-    args = { ...args, url: baseUrl + args.url }
-  }
-
-  return dynamicBaseQuery(args, api, extraOptions)
-}
+const customBaseQuery = buildDynamicBaseQueryWithReauth(selectBaseUrl)
 
 interface UpdateTaskStatusRequest {
   taskId: string
@@ -41,16 +25,10 @@ export const tasksApi = createApi({
   refetchOnFocus: true,
   endpoints: (builder) => ({
     getTasks: builder.query<TASK[], void>({
-      query: () => {
-        const token = getToken()
-        return {
-          url: `/api/tasks/mog`,
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      },
+      query: () => ({
+        url: `/api/tasks/mog`,
+        method: "GET",
+      }),
       providesTags: ["Task"],
       keepUnusedDataFor: 0,
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
@@ -58,7 +36,7 @@ export const tasksApi = createApi({
           dispatch(setLoading(true))
           const { data } = await queryFulfilled
           dispatch(setTasks(data))
-        } catch (error) {
+        } catch {
           dispatch(setError("Ошибка загрузки задач"))
         }
       },
@@ -67,13 +45,8 @@ export const tasksApi = createApi({
       query: ({ taskId, status }) => ({
         url: `/api/tasks/${taskId}/status`,
         method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-          "Content-Type": "application/json",
-        },
-        body: {
-          status: status,
-        },
+        headers: { "Content-Type": "application/json" },
+        body: { status },
       }),
       invalidatesTags: ["Task"],
       async onQueryStarted({ taskId, status }, { dispatch, queryFulfilled }) {
@@ -88,17 +61,11 @@ export const tasksApi = createApi({
       },
     }),
     deleteTask: builder.mutation<void, string>({
-      query: (taskId) => {
-        const request = {
-          url: `/api/tasks/${taskId}`,
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-            "Content-Type": "application/json",
-          },
-        }
-        return request
-      },
+      query: (taskId) => ({
+        url: `/api/tasks/${taskId}`,
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      }),
       invalidatesTags: ["Task"],
       async onQueryStarted(taskId, { dispatch, queryFulfilled }) {
         try {

@@ -1,25 +1,10 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { GlobalStateResponse } from "@/types/types";
 import { selectBaseUrl } from "@/store/reducers/appSettingsSlice";
-import { RootState } from "@/store/store";
-import { getToken } from "@/utils/globals";
+import { GlobalStateResponse } from "@/types/types";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { buildDynamicBaseQueryWithReauth } from "./baseQueryWithReauth";
 
-const dynamicBaseQuery = fetchBaseQuery({
-  baseUrl: '/',
-});
-
-const customBaseQuery = (args: any, api: any, extraOptions: any) => {
-  const state = api.getState() as RootState;
-  const baseUrl = selectBaseUrl(state);
-
-  if (typeof args === 'string') {
-    args = { url: baseUrl + args };
-  } else if (typeof args === 'object' && args.url) {
-    args = { ...args, url: baseUrl + args.url };
-  }
-
-  return dynamicBaseQuery(args, api, extraOptions);
-};
+import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
+const customBaseQuery: BaseQueryFn<FetchArgs | string, unknown, FetchBaseQueryError> = buildDynamicBaseQueryWithReauth(selectBaseUrl);
 
 export const globalState = createApi({
   reducerPath: "globalState",
@@ -28,10 +13,7 @@ export const globalState = createApi({
     getGlobalState: builder.query<GlobalStateResponse, void>({
       query: () => ({
         url: "/state/api/global-state",
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${getToken()}`
-        }
+  method: "GET",
       }),
     }),
   }),

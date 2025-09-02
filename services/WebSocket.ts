@@ -15,6 +15,8 @@ class WebSocketAuth {
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private accessToken: string | null = null;
   private subscribers: Record<string, TopicCallback[]> = {};
+  // Очередь сообщений, накопленных до установления соединения
+  private messageQueue: string[] = [];
 
   subscribe(topic: ALL_TOPICS, callback: TopicCallback) {
     if (!this.subscribers[topic]) {
@@ -59,6 +61,12 @@ class WebSocketAuth {
         this.currentReconnectAttempts = 0;
         this.isConnecting = false;
         this.clearReconnectTimeout();
+        // Отправляем накопленные сообщения
+        if (this.messageQueue.length) {
+          console.log(`Отправка ${this.messageQueue.length} сообщений из очереди после подключения`);
+          this.messageQueue.forEach(msg => this.socket?.send(msg));
+          this.messageQueue = [];
+        }
       };
 
       this.socket.onmessage = (event) => {
@@ -151,8 +159,8 @@ class WebSocketAuth {
     if (this.isConnected) {
       this.socket?.send(message);
     } else {
-      console.warn("Невозможно отправить сообщение: сокет не подключён");
-      // Можно добавить очередь сообщений для отправки после подключения
+  console.warn("Сокет не подключён, сообщение поставлено в очередь");
+  this.messageQueue.push(message);
     }
   }
 

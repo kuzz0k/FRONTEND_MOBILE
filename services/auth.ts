@@ -1,12 +1,10 @@
 import { LoginRequest, LoginResponse } from "@/types/types";
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { API_BASE_URL } from "./globals";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "./baseQueryWithReauth";
 
 export const api = createApi({
   reducerPath: "apiQuery",
-  baseQuery: fetchBaseQuery({
-    baseUrl: API_BASE_URL
-  }),
+  baseQuery: baseQueryWithReauth,
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, LoginRequest>({
       query: (userData) => ({
@@ -18,13 +16,10 @@ export const api = createApi({
         }
       })
     }),
-    validateToken: builder.mutation<any, string>({
-      query: (accessToken) => ({
+    validateToken: builder.mutation<any, void>({
+      query: () => ({
         url: "/api/auth/test",
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
       })
     }),
     refreshToken: builder.mutation<LoginResponse, { refreshToken: string }>({
@@ -36,13 +31,10 @@ export const api = createApi({
         }
       })
     }),
-    logout: builder.mutation<void, string>({
-      query: (accessToken) => ({
+    logout: builder.mutation<void, void>({
+      query: () => ({
         url: "/api/auth/logout",
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
       })
     })
   })

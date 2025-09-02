@@ -1,8 +1,8 @@
 import * as Location from "expo-location"
 import {
-  setLocationError,
-  setTrackingStatus,
-  updateUserLocation,
+    setLocationError,
+    setTrackingStatus,
+    updateUserLocation,
 } from "../store/reducers/userLocationSlice"
 import { store } from "../store/store"
 import { MogUpdated, TOPICS_MOGS } from "../types/types"
@@ -226,9 +226,28 @@ class LocationService {
       // Это позволяет в режиме drag использовать ручные координаты
       const userLocation = state.userLocation
       
-      if (!userLocation.latitude || !userLocation.longitude) {
-        console.warn("Нет координат для отправки статуса готовности")
-        return
+      // Проверяем координаты: допускаем 0 как валидное значение (экватор/Гринвич), поэтому проверяем на undefined/null
+      let { latitude, longitude } = userLocation;
+      if (latitude == null || longitude == null) {
+        console.warn("Координаты отсутствуют в Redux, пробуем получить одноразово через GPS");
+        const loc = await this.getCurrentLocation();
+        if (loc) {
+          latitude = loc.latitude;
+          longitude = loc.longitude;
+          // Обновим Redux для согласованности
+          store.dispatch(updateUserLocation({
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+            accuracy: loc.accuracy,
+            altitude: loc.altitude,
+            speed: loc.speed,
+            heading: loc.heading,
+            timestamp: loc.timestamp,
+          }));
+        } else {
+          console.warn("Не удалось получить координаты для отправки статуса готовности");
+          return;
+        }
       }
 
       // Формируем payload в соответствии с типом MogUpdated
@@ -237,8 +256,8 @@ class LocationService {
         callSign: state.user.callSign || "мобильный", // берем из Redux состояния
         ready: state.user.isReady, // берем из Redux состояния
         coordinates: {
-          lat: userLocation.latitude,
-          lng: userLocation.longitude,
+          lat: latitude,
+          lng: longitude,
         },
       }
 
