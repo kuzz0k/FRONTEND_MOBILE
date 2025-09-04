@@ -201,7 +201,7 @@ export default function MainPage() {
     const initializeGPS = async () => {
       if (!isGpsInitialized.current) {
         isGpsInitialized.current = true;
-        console.log("MainPage: инициализация GPS");
+        // console.log("MainPage: инициализация GPS");
         await startLocationUpdates();
       }
     };
@@ -322,7 +322,7 @@ export default function MainPage() {
 
   // Обработчик нажатия на маркер задачи
   const handleTaskPress = useCallback((task: TASK_DOT) => {
-    console.log("Нажата задача:", task)
+    // console.log("Нажата задача:", task)
     
     // Центрируем карту на задаче
     const newRegion = {
@@ -381,28 +381,28 @@ export default function MainPage() {
   }
 
   const handleGpsToggle = async () => {
-    console.log("handleGpsToggle: isDragMode =", isDragMode, "isLocationServiceRunning =", isLocationServiceRunning);
+    // console.log("handleGpsToggle: isDragMode =", isDragMode, "isLocationServiceRunning =", isLocationServiceRunning);
     
     if (isDragMode) {
       // Если в режиме перетаскивания, переключаемся на автоматическое отслеживание
-      console.log("Переключение из DRAG режима в GPS режим");
+      // console.log("Переключение из DRAG режима в GPS режим");
       setIsDragMode(false)
       await startLocationUpdates()
     } else if (isLocationServiceRunning) {
       // Если GPS включен, переключаемся в режим перетаскивания
-      console.log("Переключение из GPS режима в DRAG режим");
+      // console.log("Переключение из GPS режима в DRAG режим");
       setIsDragMode(true)
       stopLocationUpdates()
     } else {
       // Если GPS выключен, включаем автоматическое отслеживание
-      console.log("Включение GPS режима");
+      // console.log("Включение GPS режима");
       setIsDragMode(false)
       await startLocationUpdates()
     }
   }
 
   const handleUserMarkerDrag = async (coordinate: { latitude: number; longitude: number }) => {
-    console.log("handleUserMarkerDrag: isDragMode =", isDragMode, "coordinate =", coordinate);
+    // console.log("handleUserMarkerDrag: isDragMode =", isDragMode, "coordinate =", coordinate);
     if (isDragMode) {
       // Отправляем новые координаты на сервер только в режиме перетаскивания
       await sendManualLocationUpdate(coordinate)
@@ -411,7 +411,7 @@ export default function MainPage() {
 
   const handleConfirmMove = async () => {
     if (targetCoordinates && isDragMode) {
-      console.log("handleConfirmMove: sending coordinates =", targetCoordinates);
+      // console.log("handleConfirmMove: sending coordinates =", targetCoordinates);
       await sendManualLocationUpdate(targetCoordinates)
       setShowMoveConfirmation(false)
       setTargetCoordinates(null)

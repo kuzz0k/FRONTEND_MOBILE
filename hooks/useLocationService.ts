@@ -9,12 +9,12 @@ export const useLocationService = (autoStart: boolean = true) => {
 
   // Автоматический запуск сервиса при монтировании компонента
   useEffect(() => {
-    console.log("useLocationService useEffect: autoStart =", autoStart);
+    // console.log("useLocationService useEffect: autoStart =", autoStart);
     if (!autoStart) return;
 
     const startService = async () => {
       try {
-        console.log("useLocationService: автоматический запуск GPS");
+        // console.log("useLocationService: автоматический запуск GPS");
         const started = await locationService.startLocationUpdates();
         if (!started) {
           setLocalError('Не удалось запустить службу геолокации');
@@ -29,14 +29,14 @@ export const useLocationService = (autoStart: boolean = true) => {
 
     // Очистка при размонтировании компонента
     return () => {
-      console.log("useLocationService: очистка при размонтировании");
+      // console.log("useLocationService: очистка при размонтировании");
       locationService.stopLocationUpdates();
     };
   }, [autoStart]);
 
   const startLocationUpdates = async (): Promise<boolean> => {
     try {
-      console.log("useLocationService.startLocationUpdates: вызван вручную");
+      // console.log("useLocationService.startLocationUpdates: вызван вручную");
       setLocalError(null);
       const started = await locationService.startLocationUpdates();
       if (!started) {
@@ -52,7 +52,7 @@ export const useLocationService = (autoStart: boolean = true) => {
 
   const stopLocationUpdates = (): void => {
     try {
-      console.log("useLocationService.stopLocationUpdates: вызван");
+      // console.log("useLocationService.stopLocationUpdates: вызван");
       locationService.stopLocationUpdates();
       setLocalError(null);
     } catch (error) {

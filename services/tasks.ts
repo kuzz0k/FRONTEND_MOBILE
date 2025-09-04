@@ -36,8 +36,13 @@ export const tasksApi = createApi({
           dispatch(setLoading(true))
           const { data } = await queryFulfilled
           dispatch(setTasks(data))
+          console.log('[INIT][TASKS] loaded', Array.isArray(data) ? data.length : 'n/a')
+          if (Array.isArray(data)) {
+            console.log('[INIT][TASKS] sample', data.slice(0,3))
+          }
         } catch {
           dispatch(setError("Ошибка загрузки задач"))
+          console.error('[INIT][TASKS] load error')
         }
       },
     }),

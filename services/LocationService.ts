@@ -27,7 +27,7 @@ class LocationService {
 
   constructor() {
     this.instanceId = Math.random();
-    console.log("LocationService: создан экземпляр с ID =", this.instanceId);
+    // console.log("LocationService: создан экземпляр с ID =", this.instanceId);
     this.checkLocationPermission()
   }
 
@@ -83,11 +83,11 @@ class LocationService {
     locationData: LocationData
   ): Promise<void> {
     try {
-      console.log("sendLocationToServer: автоматическая отправка, isRunning =", this.isRunning);
+      // console.log("sendLocationToServer: автоматическая отправка, isRunning =", this.isRunning);
       
       // Дополнительная проверка - не отправляем автоматические обновления если сервис остановлен
       if (!this.isRunning) {
-        console.log("sendLocationToServer: отменено, сервис остановлен");
+        // console.log("sendLocationToServer: отменено, сервис остановлен");
         return;
       }
       
@@ -134,9 +134,9 @@ class LocationService {
   }
 
   private async updateLocation(): Promise<void> {
-    console.log(`updateLocation [${this.instanceId}]: автоматическое обновление, isRunning =`, this.isRunning);
+    // console.log(`updateLocation [${this.instanceId}]: автоматическое обновление, isRunning =`, this.isRunning);
     if (!this.isRunning) {
-      console.log(`updateLocation [${this.instanceId}]: отменено, сервис остановлен`);
+      // console.log(`updateLocation [${this.instanceId}]: отменено, сервис остановлен`);
       return;
     }
     
@@ -147,7 +147,7 @@ class LocationService {
   }
 
   public async startLocationUpdates(): Promise<boolean> {
-    console.log(`startLocationUpdates [${this.instanceId}]: вызван, isRunning =`, this.isRunning, "intervalId =", this.intervalId);
+    // console.log(`startLocationUpdates [${this.instanceId}]: вызван, isRunning =`, this.isRunning, "intervalId =", this.intervalId);
     
     if (this.isRunning) {
       console.warn(`startLocationUpdates [${this.instanceId}]: Отправка местоположения уже запущена`)
@@ -156,7 +156,7 @@ class LocationService {
 
     // Убеждаемся, что предыдущий интервал очищен
     if (this.intervalId) {
-      console.log(`startLocationUpdates [${this.instanceId}]: очищаем предыдущий интервал`, this.intervalId);
+      // console.log(`startLocationUpdates [${this.instanceId}]: очищаем предыдущий интервал`, this.intervalId);
       clearInterval(this.intervalId);
       this.intervalId = null;
     }
@@ -179,12 +179,12 @@ class LocationService {
       await this.updateLocation()
     }, this.LOCATION_INTERVAL)
 
-    console.log("Периодическая отправка местоположения запущена, isRunning =", this.isRunning, "intervalId =", this.intervalId)
+    // console.log("Периодическая отправка местоположения запущена, isRunning =", this.isRunning, "intervalId =", this.intervalId)
     return true
   }
 
   public stopLocationUpdates(): void {
-    console.log("stopLocationUpdates: вызван, isRunning =", this.isRunning, "intervalId =", this.intervalId);
+    // console.log("stopLocationUpdates: вызван, isRunning =", this.isRunning, "intervalId =", this.intervalId);
     
     if (!this.isRunning) {
       console.warn("Отправка местоположения уже остановлена")
@@ -194,12 +194,12 @@ class LocationService {
     if (this.intervalId) {
       clearInterval(this.intervalId)
       this.intervalId = null
-      console.log("stopLocationUpdates: интервал очищен");
+      // console.log("stopLocationUpdates: интервал очищен");
     }
 
     this.isRunning = false
     store.dispatch(setTrackingStatus(false))
-    console.log("Периодическая отправка местоположения остановлена, isRunning =", this.isRunning)
+    // console.log("Периодическая отправка местоположения остановлена, isRunning =", this.isRunning)
   }
 
   public isLocationServiceRunning(): boolean {
@@ -212,7 +212,7 @@ class LocationService {
 
   public async sendReadyStatusUpdate(): Promise<void> {
     try {
-      console.log("sendReadyStatusUpdate: вызван");
+      // console.log("sendReadyStatusUpdate: вызван");
       
       if (!WebSocketService.isConnected) {
         console.warn("WebSocket не подключен, статус готовности не отправлен")
@@ -267,7 +267,7 @@ class LocationService {
       })
 
       WebSocketService.sendMessage(message)
-      console.log("Статус готовности отправлен с координатами из Redux:", mogUpdatedPayload)
+      // console.log("Статус готовности отправлен с координатами из Redux:", mogUpdatedPayload)
     } catch (error) {
       console.error("Ошибка при отправке статуса готовности:", error)
     }
@@ -275,7 +275,7 @@ class LocationService {
 
   public async sendManualLocationUpdate(coordinates: { latitude: number; longitude: number }): Promise<void> {
     try {
-      console.log("sendManualLocationUpdate: sending coordinates =", coordinates);
+      // console.log("sendManualLocationUpdate: sending coordinates =", coordinates);
       
       if (!WebSocketService.isConnected) {
         console.warn("WebSocket не подключен, местоположение не отправлено")
@@ -283,7 +283,7 @@ class LocationService {
       }
 
       // Обновляем Redux store с новыми координатами
-      console.log("sendManualLocationUpdate: обновляем Redux store");
+      // console.log("sendManualLocationUpdate: обновляем Redux store");
       store.dispatch(
         updateUserLocation({
           latitude: coordinates.latitude,
@@ -294,11 +294,11 @@ class LocationService {
 
       // Проверяем, что Redux действительно обновился
       const updatedState = store.getState();
-      console.log("sendManualLocationUpdate: Redux обновлен, новые координаты =", {
-        lat: updatedState.userLocation.latitude,
-        lng: updatedState.userLocation.longitude,
-        timestamp: updatedState.userLocation.timestamp
-      });
+      // console.log("sendManualLocationUpdate: Redux обновлен, новые координаты =", {
+      //   lat: updatedState.userLocation.latitude,
+      //   lng: updatedState.userLocation.longitude,
+      //   timestamp: updatedState.userLocation.timestamp
+      // });
 
       // Формируем payload в соответствии с типом MogUpdated
       const mogUpdatedPayload: MogUpdated = {
@@ -317,7 +317,7 @@ class LocationService {
       })
 
       WebSocketService.sendMessage(message)
-      console.log("Ручное обновление местоположения отправлено:", mogUpdatedPayload)
+      // console.log("Ручное обновление местоположения отправлено:", mogUpdatedPayload)
     } catch (error) {
       console.error("Ошибка при отправке ручного обновления местоположения:", error)
       store.dispatch(setLocationError("Ошибка при отправке местоположения"))

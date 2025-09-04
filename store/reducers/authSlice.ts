@@ -39,6 +39,8 @@ export const userSlice = createSlice({
       state.callSign = actions.payload.callSign
       state.accessToken = actions.payload.access_token
       state.refreshToken = actions.payload.refresh_token
+  // Log access token on login
+  console.log('[AUTH][LOGIN] access_token', actions.payload.access_token)
       AsyncStorage.setItem("accessToken", actions.payload.access_token)
       AsyncStorage.setItem("refreshToken", actions.payload.refresh_token)
       AsyncStorage.setItem("username", actions.payload.username)
@@ -61,6 +63,7 @@ export const userSlice = createSlice({
     updateTokens: (state, action: PayloadAction<{ access_token: string; refresh_token: string }>) => {
       state.accessToken = action.payload.access_token
       state.refreshToken = action.payload.refresh_token
+  console.log('[AUTH][REFRESH] new access_token', action.payload.access_token)
       AsyncStorage.setItem("accessToken", action.payload.access_token)
       AsyncStorage.setItem("refreshToken", action.payload.refresh_token)
     }

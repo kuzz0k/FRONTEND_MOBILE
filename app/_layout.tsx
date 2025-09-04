@@ -10,6 +10,7 @@ import { login } from "../store/reducers/authSlice";
 import { store } from '../store/store';
 import AuthPage from './AuthPage';
 import MainPage from './MainPage';
+import LogOverlay from '../components/LogOverlay';
 
 function RootLayoutContent() {
   const dispatch = useAppDispatch();
@@ -97,7 +98,8 @@ function RootLayoutContent() {
 
   return (
     <>
-      {isAuth ? <MainPage /> : <AuthPage />}
+  {isAuth ? <MainPage /> : <AuthPage />}
+  <LogOverlay />
       <StatusBar style="auto" />
     </>
   );
