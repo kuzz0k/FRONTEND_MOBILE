@@ -12,7 +12,7 @@ import UserLocationMarker from "./UserLocationMarker"
 
 import { TASK_DOT } from "../../types/types"
 import { AirCraftsLayer } from "./Aircrafts/AircraftLayer"
-import WebFallbackMapView, { WebFallbackHandle } from './WebFallbackMapView'
+import WebMapFallback, { WebFallbackHandle } from './WebFallbackMapView'
 
 // Флаг для поэтапной миграции. true -> использовать web fallback вместо native.
 // Дальше можно связать с ENV (EXPO_PUBLIC_USE_WEB_MAP) или настройками.
@@ -58,6 +58,7 @@ export default function CustomMapView({
 }: CustomMapViewProps) {
   const { mapType, region } = useSelector((state: RootState) => state.map)
   const userLocation = useSelector((state: RootState) => state.userLocation)
+  const refpoint = useSelector((state: RootState) => state.reperDot)
 
   const getMapTypeForNativeMaps = (type: MapType) => {
     switch (type) {
@@ -73,7 +74,7 @@ export default function CustomMapView({
 
   if (USE_WEB_FALLBACK) {
     return (
-      <WebFallbackMapView
+  <WebMapFallback
         ref={webMapRef as any}
         style={style}
         onPress={onPress}
@@ -109,6 +110,15 @@ export default function CustomMapView({
         onPress={onPress}
         onPanDrag={onPanDrag}
       >
+        {refpoint.lat != null && refpoint.lng != null && (
+          <Marker
+            coordinate={{ latitude: refpoint.lat, longitude: refpoint.lng }}
+            identifier="refpoint"
+            anchor={{ x: 0.5, y: 0.5 }}
+          >
+            <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: '#9C27B0', borderWidth: 2, borderColor: '#fff' }} />
+          </Marker>
+        )}
         {userLocation.latitude && userLocation.longitude && (
           <Marker
             coordinate={{

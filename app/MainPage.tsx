@@ -5,6 +5,7 @@ import { tasksApi, useAcceptTaskMutation, useCompleteTaskMutation, useGetTasksQu
 import { WebSocketService } from "@/services/WebSocket"
 import { deleteAirCraft, setAirCraftLost, setAirCraftsState, updateAircraftType } from "@/store/reducers/aircraftSlice"
 import { addMog, deleteMog, disconnectMog, setMogs, updateMog } from "@/store/reducers/mogSlice"
+import { setReperDot } from "@/store/reducers/reperDotSlice"
 import { setEquipments } from "@/store/reducers/rlsSlice"
 import { addTask, removeTask, setTasks, updateTask, updateTaskStatus } from "@/store/reducers/tasksSlice"
 import { ALL_TOPICS, STATUS, TASK_DOT } from "@/types/types"
@@ -43,6 +44,13 @@ export default function MainPage() {
       dispatch(setMogs(data.mogs))
       dispatch(setEquipments(data.equipment))
       dispatch(setAirCraftsState(data.aircrafts))
+      // Инициализируем реперную точку из global-state
+      if (data.refpoint?.coordinates) {
+        dispatch(setReperDot({
+          lat: data.refpoint.coordinates.lat,
+          lng: data.refpoint.coordinates.lng,
+        }))
+      }
     }
   }, [isSuccess, data, dispatch])
 
@@ -116,6 +124,25 @@ export default function MainPage() {
     dispatch(removeTask(taskData.id));
   }, [dispatch]);
 
+  // REFPOINT handlers
+  const handleRefPointCreated = useCallback((refPointData: any) => {
+    const coords = refPointData?.coordinates || refPointData;
+    if (coords && typeof coords.lat === 'number' && typeof coords.lng === 'number') {
+      dispatch(setReperDot({ lat: coords.lat, lng: coords.lng }))
+    }
+  }, [dispatch])
+
+  const handleRefPointUpdated = useCallback((refPointData: any) => {
+    const coords = refPointData?.coordinates || refPointData;
+    if (coords && typeof coords.lat === 'number' && typeof coords.lng === 'number') {
+      dispatch(setReperDot({ lat: coords.lat, lng: coords.lng }))
+    }
+  }, [dispatch])
+
+  const handleRefPointDeleted = useCallback(() => {
+    dispatch(setReperDot({ lat: null, lng: null }))
+  }, [dispatch])
+
   // const handleMogConnected = useCallback((mogConnectedData) => {
   //   dispatch(updateMog())
   // })
@@ -132,6 +159,10 @@ export default function MainPage() {
     [ALL_TOPICS.AIRCRAFT_UPDATED]: handleAirCraftUpdated,
     [ALL_TOPICS.AIRCRAFT_DELETED]: handleAirCraftDelete,
     [ALL_TOPICS.AIRCRAFT_LOST]: handleAirCraftLost,
+    // REFPOINT
+    [ALL_TOPICS.REFPOINT_CREATED]: handleRefPointCreated,
+    [ALL_TOPICS.REFPOINT_UPDATED]: handleRefPointUpdated,
+    [ALL_TOPICS.REFPOINT_DELETED]: handleRefPointDeleted,
     // TASKS
     [ALL_TOPICS.TASK_CREATED]: handleTaskCreated,
     [ALL_TOPICS.TASK_EDITED]: handleTaskEdited,
@@ -142,7 +173,7 @@ export default function MainPage() {
     [ALL_TOPICS.TASK_REMOVED]: handleTaskRemoved,
     [ALL_TOPICS.TASK_DELETED]: handleTaskDeleted,
     // [ALL_TOPICS.MOG_CONNECTED]:
-  }), [handleMogQuit, handleMogUpdate, handleMogDisconnected, handleMogEntered, handleAirCraftUpdated, handleAirCraftDelete, handleAirCraftLost, handleTaskCreated, handleTaskEdited, handleTaskImpacted, handleTaskAccepted, handleTaskRejected, handleTaskCompleted, handleTaskRemoved, handleTaskDeleted]);
+  }), [handleMogQuit, handleMogUpdate, handleMogDisconnected, handleMogEntered, handleAirCraftUpdated, handleAirCraftDelete, handleAirCraftLost, handleRefPointCreated, handleRefPointUpdated, handleRefPointDeleted, handleTaskCreated, handleTaskEdited, handleTaskImpacted, handleTaskAccepted, handleTaskRejected, handleTaskCompleted, handleTaskRemoved, handleTaskDeleted]);
 
   useEffect(() => {
     if (!tokenState) return;
@@ -279,7 +310,7 @@ export default function MainPage() {
     try {
       WebSocketService.disconnect()
       if (tokenState) {
-        await logoutMutation(tokenState).unwrap()
+        await logoutMutation().unwrap()
       }
       dispatch(logout())
       dispatch(api.util.resetApiState())
@@ -368,17 +399,17 @@ export default function MainPage() {
     mapRef.current?.animateToRegion(newRegion, 300)
   }
 
-  const centerOnUser = () => {
-    if (userLocation.latitude && userLocation.longitude) {
-      const newRegion = {
-        latitude: userLocation.latitude,
-        longitude: userLocation.longitude,
-        latitudeDelta: 0.01, // Приближенный зум
-        longitudeDelta: 0.01,
-      }
-      mapRef.current?.animateToRegion(newRegion, 500)
-    }
-  }
+  // const centerOnUser = () => {
+  //   if (userLocation.latitude && userLocation.longitude) {
+  //     const newRegion = {
+  //       latitude: userLocation.latitude,
+  //       longitude: userLocation.longitude,
+  //       latitudeDelta: 0.01, // Приближенный зум
+  //       longitudeDelta: 0.01,
+  //     }
+  //     mapRef.current?.animateToRegion(newRegion, 500)
+  //   }
+  // }
 
   const handleGpsToggle = async () => {
     // console.log("handleGpsToggle: isDragMode =", isDragMode, "isLocationServiceRunning =", isLocationServiceRunning);
