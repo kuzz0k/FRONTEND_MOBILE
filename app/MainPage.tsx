@@ -117,11 +117,13 @@ export default function MainPage() {
   }, [dispatch]);
 
   const handleTaskRemoved = useCallback((taskData: any) => {
-    dispatch(removeTask(taskData.id));
+    const id = typeof taskData === 'string' ? taskData : taskData?.id;
+    if (id) dispatch(removeTask(id));
   }, [dispatch]);
 
   const handleTaskDeleted = useCallback((taskData: any) => {
-    dispatch(removeTask(taskData.id));
+    const id = typeof taskData === 'string' ? taskData : taskData?.id;
+    if (id) dispatch(removeTask(id));
   }, [dispatch]);
 
   // REFPOINT handlers

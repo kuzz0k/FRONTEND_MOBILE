@@ -99,7 +99,7 @@ function RootLayoutContent() {
   return (
     <>
   {isAuth ? <MainPage /> : <AuthPage />}
-  <LogOverlay />
+  {/* <LogOverlay /> */}
       <StatusBar style="auto" />
     </>
   );

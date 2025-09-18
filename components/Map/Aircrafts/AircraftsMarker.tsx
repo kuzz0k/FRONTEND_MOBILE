@@ -2,9 +2,10 @@ import React, { FC, useCallback, useMemo } from "react"
 import { LatLng, Marker, Polyline } from "react-native-maps"
 import { useAppDispatch, useAppSelector } from "../../../hooks/redux"
 import {
-  setSelectedAirCraft,
+    setSelectedAirCraft,
 } from "../../../store/reducers/aircraftSlice"
-import { AircraftType } from "../../../types/types"
+import { selectAircraftTasks } from "../../../store/reducers/tasksSlice"
+import { AircraftType, STATUS } from "../../../types/types"
 
 interface AirCraftsMarkerProps {
   data: AircraftType
@@ -15,6 +16,7 @@ export const AirCraftsMarker: FC<AirCraftsMarkerProps> = ({ data }) => {
   const airCraftsClassification = useAppSelector(
     (state) => state.airCrafts.airCraftClassification
   )
+  const aircraftTasks = useAppSelector(selectAircraftTasks)
 
 
   const classificationData = useMemo(
@@ -26,6 +28,19 @@ export const AirCraftsMarker: FC<AirCraftsMarkerProps> = ({ data }) => {
       },
     [airCraftsClassification, data.type]
   )
+
+  // Если у дрона есть назначенная задача TO_AIRCRAFT, меняем цвет маркера в зависимости от статуса
+  const markerColor = useMemo(() => {
+    const related = aircraftTasks.find(t => t.aircraftId === data.aircraftId)
+    if (!related) return classificationData.color
+    switch (related.status) {
+      case STATUS.PENDING: return '#FFA726' // оранжевый
+      case STATUS.ACCEPTED: return '#42A5F5' // синий
+      case STATUS.COMPLETED: return '#66BB6A' // зелёный
+      case STATUS.REJECTED: return '#EF5350' // красный
+      default: return classificationData.color
+    }
+  }, [aircraftTasks, data.aircraftId, classificationData.color])
 
   const currentPosition: LatLng = useMemo(
     () =>
@@ -63,7 +78,7 @@ export const AirCraftsMarker: FC<AirCraftsMarkerProps> = ({ data }) => {
       {isValidPosition && (
         <Marker
           coordinate={currentPosition}
-          pinColor={classificationData.color}
+          pinColor={markerColor}
           onPress={handleClick}
           title={`✈️ ${classificationData.name}`}
           description={

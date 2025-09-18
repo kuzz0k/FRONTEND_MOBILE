@@ -1,4 +1,4 @@
-import { STATUS, TASK, TASK_DOT, TYPE_TO } from '@/types/types';
+import { STATUS, TASK, TASK_AIRCRAFT, TASK_DOT, TYPE_TO } from '@/types/types';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 
@@ -141,6 +141,12 @@ export const selectTasksCountByStatus = (status: STATUS) => (state: RootState) =
 export const selectPointTasks = (state: RootState) =>
   state.tasks.tasks.filter((task): task is TASK_DOT => 
     task.type === TYPE_TO.TO_POINT && 'coordinates' in task
+  );
+
+// Селектор для задач, привязанных к дрону (TO_AIRCRAFT)
+export const selectAircraftTasks = (state: RootState) =>
+  state.tasks.tasks.filter((task): task is TASK_AIRCRAFT =>
+    task.type === TYPE_TO.TO_AIRCRAFT && 'aircraftId' in task
   );
 
 export default tasksSlice.reducer;
