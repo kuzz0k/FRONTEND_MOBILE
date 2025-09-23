@@ -9,6 +9,7 @@ import { setReperDot } from "@/store/reducers/reperDotSlice"
 import { setEquipments } from "@/store/reducers/rlsSlice"
 import { addTask, removeTask, setTasks, updateTask, updateTaskStatus } from "@/store/reducers/tasksSlice"
 import { ALL_TOPICS, STATUS, TASK_DOT } from "@/types/types"
+import { Audio } from 'expo-av'
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { StyleSheet, View } from "react-native"
 import MapView, { Region } from "react-native-maps"
@@ -92,6 +93,17 @@ export default function MainPage() {
   // Мемоизированные callback для обработки обновлений задач через WEBSOCKET
   const handleTaskCreated = useCallback((taskData: any) => {
     dispatch(addTask(taskData));
+    // Воспроизводим звук уведомления
+    (async () => {
+      try {
+        const { sound } = await Audio.Sound.createAsync(
+          require('../assets/sounds/notification.mp3')
+        );
+        await sound.playAsync();
+      } catch (e) {
+        // Ошибку можно залогировать, если нужно
+      }
+    })();
   }, [dispatch]);
 
   const handleTaskEdited = useCallback((taskData: any) => {

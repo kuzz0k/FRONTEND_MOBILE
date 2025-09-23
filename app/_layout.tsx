@@ -44,7 +44,7 @@ function RootLayoutContent() {
 
       try {
         // Пытаемся валидировать текущий токен
-        await validateToken(accessToken).unwrap();
+        await validateToken().unwrap();
         
         // Если валидация прошла успешно, логиним пользователя
         dispatch(login({
