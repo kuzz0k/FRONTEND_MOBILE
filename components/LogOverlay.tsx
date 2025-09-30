@@ -92,7 +92,7 @@ function levelStyle(level: string) {
 }
 
 const styles = StyleSheet.create({
-  wrapper: { position:'absolute', top: Platform.OS === 'android' ? 130 : 30, left:0, right:0, zIndex:9999, elevation:9999 },
+  wrapper: { position:'absolute', top: Platform.OS === 'android' ? 130 : 130, left:0, right:0, zIndex:9999, elevation:9999 },
   toggle: { alignSelf:'flex-end', backgroundColor:'rgba(0,0,0,0.6)', paddingHorizontal:18, paddingVertical:10, borderBottomLeftRadius:12, borderBottomRightRadius:0, elevation:9999 },
   toggleOn: { backgroundColor:'rgba(0,0,0,0.85)' },
   toggleText: { fontSize:15, color:'#fff', fontWeight:'700', letterSpacing:0.5 },

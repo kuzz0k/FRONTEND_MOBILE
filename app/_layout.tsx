@@ -6,11 +6,11 @@ import * as ScreenOrientation from "expo-screen-orientation";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useState } from "react";
 import { Provider } from 'react-redux';
+import LogOverlay from '../components/LogOverlay';
 import { login } from "../store/reducers/authSlice";
 import { store } from '../store/store';
 import AuthPage from './AuthPage';
 import MainPage from './MainPage';
-import LogOverlay from '../components/LogOverlay';
 
 function RootLayoutContent() {
   const dispatch = useAppDispatch();
@@ -99,7 +99,7 @@ function RootLayoutContent() {
   return (
     <>
   {isAuth ? <MainPage /> : <AuthPage />}
-  {/* <LogOverlay /> */}
+  <LogOverlay />
       <StatusBar style="auto" />
     </>
   );
