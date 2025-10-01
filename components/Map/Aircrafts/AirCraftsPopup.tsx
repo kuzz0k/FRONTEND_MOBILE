@@ -1,9 +1,9 @@
 import React, { FC, useMemo } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { ClassificationType } from "../../../store/reducers/aircraftSlice";
-import { AircraftType } from "../../../types/types";
 import { CoordState } from "../../../store/reducers/reperDotSlice";
+import { AircraftType } from "../../../types/types";
 
 export interface AirCraftsPopupProps {
   data: AircraftType;
@@ -71,7 +71,7 @@ export const AirCraftsPopup: FC<AirCraftsPopupProps> =
         <Text>Высота: {typeof data.heightInMeters === 'number' ? `${data.heightInMeters} м` : "N/A"}</Text>
         <Text>Скорость: {typeof data.speedInMeters === 'number' ? `${data.speedInMeters} м/с` : "N/A"}</Text>
 
-        <Text style={styles.subtitle}>Местоположение:</Text>
+  <Text style={styles.subtitle}>Местоположение (от репера):</Text>
         <Text>Азимут: {computed.azimuth != null ? `${computed.azimuth}°` : "N/A"}</Text>
         <Text>Дистанция: {computed.distance != null ? `${computed.distance} м` : "N/A"}</Text>
 
