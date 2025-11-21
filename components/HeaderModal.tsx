@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather"; // or appropriate icon library
 import { STATUS, TYPE_TO } from "../types/types";
+import { selectPointTasks } from "@/store/reducers/tasksSlice";
 
 // Full-width header: no need to calculate window width manually
 
@@ -62,7 +63,7 @@ export default function HeaderModal({
   // isMapSettingsOpen removed (подложка отключена)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isTasksModalOpen, setIsTasksModalOpen] = useState(false)
-  const tasks = useAppSelector(state => state.tasks.tasks)
+  const tasks = useAppSelector(selectPointTasks)
 
   const formatCoords = (lat: number, lon: number) => {
     if (lat === 0 && lon === 0) {

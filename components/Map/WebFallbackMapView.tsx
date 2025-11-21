@@ -48,60 +48,82 @@ export const WebFallbackMapView = forwardRef<WebFallbackHandle, WebFallbackMapVi
   const classification = useAppSelector(s => s.airCrafts.airCraftClassification);
   const selectedAircraft = useAppSelector(s => s.airCrafts.selectedAirCraft);
 
-  const preparedAircrafts = useMemo(() => (aircrafts || []).map((a: AircraftType) => {
-  const cls = classification.find((c: ClassificationType) => c.type === a.type);
-    const last = a.coordinates?.length ? a.coordinates[a.coordinates.length - 1] : undefined;
-    if (!last) return null;
-    // override color if there is a TO_AIRCRAFT task for this aircraft
-    const related = aircraftTasks.find(t => t.aircraftId === a.aircraftId);
-    const colorByTask = related ? ((): string => {
-      switch (related.status) {
-        case 'PENDING': return '#FFA726';
-        case 'ACCEPTED': return '#42A5F5';
-        case 'COMPLETED': return '#66BB6A';
-        case 'REJECTED': return '#EF5350';
-        default: return cls?.color || '#F11D36';
-      }
-    })() : (cls?.color || '#F11D36');
+  const preparedAircrafts = useMemo(() => {
+    console.log('[WebFallbackMapView] Preparing aircrafts:', {
+      totalAircrafts: aircrafts?.length || 0,
+      aircraftIds: aircrafts?.map((a: AircraftType) => a.aircraftId) || [],
+      aircraftTasks: aircraftTasks?.length || 0
+    });
+    return (aircrafts || [])
+      .map((a: AircraftType) => {
+        const cls = classification.find((c: ClassificationType) => c.type === a.type);
+        const last = a.coordinates?.length ? a.coordinates[a.coordinates.length - 1] : undefined;
+        console.log('[WebFallbackMapView] Processing aircraft:', {
+          aircraftId: a.aircraftId,
+          hasCoordinates: !!a.coordinates?.length,
+          lastCoordinate: last
+        });
+        if (!last) return null;
 
-    // Compute position relative to current refpoint (if present)
-    let computedPosition: { distanceInMeters: number; azimuth: number } | null = null;
-    if (refpoint.lat != null && refpoint.lng != null) {
-      const toRad = (d: number) => (d * Math.PI) / 180;
-      const toDeg = (r: number) => (r * 180) / Math.PI;
-      const R = 6371000; // meters
-      const dLat = toRad(last.lat - refpoint.lat);
-      const dLng = toRad(last.lng - refpoint.lng);
-      const lat1 = toRad(refpoint.lat);
-      const lat2 = toRad(last.lat);
-      const aH = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-      const cH = 2 * Math.atan2(Math.sqrt(aH), Math.sqrt(1 - aH));
-      const dist = Math.round(R * cH);
-      // Bearing
-      const φ1 = lat1;
-      const φ2 = lat2;
-      const λ1 = toRad(refpoint.lng);
-      const λ2 = toRad(last.lng);
-      const y = Math.sin(λ2 - λ1) * Math.cos(φ2);
-      const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(λ2 - λ1);
-      const θ = Math.atan2(y, x);
-      const az = Math.round(((toDeg(θ) + 360) % 360));
-      computedPosition = { distanceInMeters: dist, azimuth: az };
-    }
-    return {
-      aircraftId: a.aircraftId,
-      color: colorByTask,
-      name: cls?.name || '—',
-      course: a.course,
-      heightInMeters: a.heightInMeters,
-      speedInMeters: a.speedInMeters,
-      detectedBy: a.detectedBy,
-      // Always use computed position relative to refpoint (or null if not available)
-      position: computedPosition,
-      last,
-      path: a.coordinates || [],
-    };
-  }).filter(Boolean), [aircrafts, classification, aircraftTasks, refpoint]) as any[];
+        // override color if there is a TO_AIRCRAFT task for this aircraft
+        const related = aircraftTasks.find(t => t.aircraftId === a.aircraftId);
+        const colorByTask = related ? ((): string => {
+          switch (related.status) {
+            case 'PENDING': return '#FFF';
+            case 'ACCEPTED': return '#42A5F5';
+            case 'COMPLETED': return '#66BB6A';
+            case 'REJECTED': return '#EF5350';
+            default: return cls?.color || '#F11D36';
+          }
+        })() : (cls?.color || '#F11D36');
+
+        // Compute position relative to current refpoint (if present)
+        let computedPosition: { distanceInMeters: number; azimuth: number } | null = null;
+        if (refpoint.lat != null && refpoint.lng != null) {
+          const toRad = (d: number) => (d * Math.PI) / 180;
+          const toDeg = (r: number) => (r * 180) / Math.PI;
+          const R = 6371000; // meters
+          const dLat = toRad(last.lat - refpoint.lat);
+          const dLng = toRad(last.lng - refpoint.lng);
+          const lat1 = toRad(refpoint.lat);
+          const lat2 = toRad(last.lat);
+          const aH = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+          const cH = 2 * Math.atan2(Math.sqrt(aH), Math.sqrt(1 - aH));
+          const dist = Math.round(R * cH);
+          // Bearing
+          const φ1 = lat1;
+          const φ2 = lat2;
+          const λ1 = toRad(refpoint.lng);
+          const λ2 = toRad(last.lng);
+          const y = Math.sin(λ2 - λ1) * Math.cos(φ2);
+          const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(λ2 - λ1);
+          const θ = Math.atan2(y, x);
+          const az = Math.round(((toDeg(θ) + 360) % 360));
+          computedPosition = { distanceInMeters: dist, azimuth: az };
+        }
+        return {
+          aircraftId: a.aircraftId,
+          color: colorByTask,
+          name: cls?.name || '—',
+          course: a.course,
+          heightInMeters: a.heightInMeters,
+          speedInMeters: a.speedInMeters,
+          detectedBy: a.detectedBy,
+          // Always use computed position relative to refpoint (or null if not available)
+          position: computedPosition,
+          last,
+          path: a.coordinates || [],
+        };
+      })
+      .filter(Boolean) as any[];
+  }, [aircrafts, classification, aircraftTasks, refpoint]);
+
+  useEffect(() => {
+    console.log('[WebFallbackMapView] preparedAircrafts updated:', {
+      count: preparedAircrafts.length,
+      aircrafts: preparedAircrafts.map(a => ({ id: a.aircraftId, color: a.color, last: a.last }))
+    });
+  }, [preparedAircrafts]);
 
   const statePayload = useMemo(() => ({
     center: { lat: mapRegion.latitude, lng: mapRegion.longitude },

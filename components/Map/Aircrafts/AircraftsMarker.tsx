@@ -2,7 +2,7 @@ import React, { FC, useCallback, useMemo } from "react"
 import { LatLng, Marker, Polyline } from "react-native-maps"
 import { useAppDispatch, useAppSelector } from "../../../hooks/redux"
 import {
-    setSelectedAirCraft,
+  setSelectedAirCraft,
 } from "../../../store/reducers/aircraftSlice"
 import { selectAircraftTasks } from "../../../store/reducers/tasksSlice"
 import { AircraftType, STATUS } from "../../../types/types"
@@ -95,7 +95,7 @@ export const AirCraftsMarker: FC<AirCraftsMarkerProps> = ({ data }) => {
       {pathCoordinates.length > 1 && (
         <Polyline
           coordinates={pathCoordinates}
-          strokeColor={classificationData.color}
+          strokeColor={"#fff"}
           strokeWidth={2}
           lineDashPattern={[5, 5]}
         />

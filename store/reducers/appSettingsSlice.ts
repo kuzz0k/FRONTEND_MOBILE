@@ -1,7 +1,7 @@
+import { API_BASE_URL } from "@/services/globals";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export type MapType = "hybrid" | "scheme" | "satellite"
-
 
 export interface AppSettingsState {
   mapType: MapType;
@@ -15,9 +15,9 @@ export interface AppSettingsState {
 const initialState: AppSettingsState = {
   mapType: "hybrid",
   network: {
-    // ip: "91.204.178.227",
-    ip: "192.168.31.52",
-    port: "8000"
+    // ip: "85.174.248.147",
+    ip: API_BASE_URL.slice(7, 20) || "192.168.31.28",
+    port: API_BASE_URL.slice(21, 25) || "8000"
   }
 };
 

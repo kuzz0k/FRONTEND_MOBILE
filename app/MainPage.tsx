@@ -30,6 +30,7 @@ export default function MainPage() {
   const isReady = useAppSelector((state) => state.user.isReady) // Берем из Redux
   const userCallSign = useAppSelector((state) => state.user.callSign) // Берем позывной из Redux
   const userLocation = useAppSelector((state) => state.userLocation) // Координаты пользователя
+  const tasksFromState = useAppSelector((state) => state.tasks.tasks) // Задачи из Redux стейта
   const dispatch = useAppDispatch()
   const [logoutMutation] = useLogoutMutation()
   const [acceptTask] = useAcceptTaskMutation()
@@ -41,10 +42,24 @@ export default function MainPage() {
   const { data, isSuccess } = useGetGlobalStateQuery()
 
   useEffect(() => {
-    if (data) {
+    console.log(tasksFromState)
+    console.log(data)
+    // Ждем пока загрузятся и data, и tasks, чтобы правильно отфильтровать aircrafts
+    if (data && tasksFromState.length > 0) {
       dispatch(setMogs(data.mogs))
       dispatch(setEquipments(data.equipment))
-      dispatch(setAirCraftsState(data.aircrafts))
+      
+      // Фильтруем aircrafts - оставляем только те, которые есть в задачах
+      const filteredAircrafts = data.aircrafts.filter((aircraft) => 
+        tasksFromState.some((task: any) => task.aircraftId === aircraft.aircraftId)
+      );
+      console.log('[MainPage] Initial aircrafts filter:', {
+        totalAircrafts: data.aircrafts.length,
+        filteredAircrafts: filteredAircrafts.length,
+        totalTasks: tasksFromState.length
+      });
+      dispatch(setAirCraftsState(filteredAircrafts))
+      
       // Инициализируем реперную точку из global-state
       if (data.refpoint?.coordinates) {
         dispatch(setReperDot({
@@ -52,8 +67,19 @@ export default function MainPage() {
           lng: data.refpoint.coordinates.lng,
         }))
       }
+    } else if (data && tasksFromState.length === 0) {
+      // Если задач нет, все равно инициализируем остальные данные, но без aircrafts
+      dispatch(setMogs(data.mogs))
+      dispatch(setEquipments(data.equipment))
+      dispatch(setAirCraftsState([]))
+      if (data.refpoint?.coordinates) {
+        dispatch(setReperDot({
+          lat: data.refpoint.coordinates.lat,
+          lng: data.refpoint.coordinates.lng,
+        }))
+      }
     }
-  }, [isSuccess, data, dispatch])
+  }, [isSuccess, data, dispatch, tasksFromState])
 
   useEffect(() => {
     if (tasks) {
@@ -79,8 +105,22 @@ export default function MainPage() {
   }, [dispatch]);
 
   const handleAirCraftUpdated = useCallback((airCraftData: any) => {
-    dispatch(updateAircraftType(airCraftData))
-  }, [dispatch]);
+    // Проверяем, есть ли aircraftId в задачах
+    console.log('[MainPage] Aircraft update received:', {
+      aircraftId: airCraftData.aircraftId,
+      totalTasks: tasksFromState,
+      tasksWithAircraftId: tasksFromState.filter((t: any) => t.aircraftId).length
+    });
+    const hasTaskWithAircraft = tasksFromState.some(
+      (task: any) => task.aircraftId === airCraftData.aircraftId
+    );
+    
+    console.log('[MainPage] hasTaskWithAircraft:', hasTaskWithAircraft, 'for aircraftId:', airCraftData.aircraftId);
+    // Добавляем/обновляем дрон только если он есть в задачах
+    if (hasTaskWithAircraft) {
+      dispatch(updateAircraftType(airCraftData));
+    }
+  }, [dispatch, tasksFromState]);
 
   const handleAirCraftDelete = useCallback((airCraftData: any) => {
     dispatch(deleteAirCraft(airCraftData))
@@ -130,13 +170,27 @@ export default function MainPage() {
 
   const handleTaskRemoved = useCallback((taskData: any) => {
     const id = typeof taskData === 'string' ? taskData : taskData?.id;
-    if (id) dispatch(removeTask(id));
-  }, [dispatch]);
+    if (id) {
+      // Находим удаляемую задачу и если у неё есть aircraftId, удаляем дрон
+      const taskToRemove = tasksFromState.find((t: any) => t.id === id);
+      if (taskToRemove && 'aircraftId' in taskToRemove && taskToRemove.aircraftId) {
+        dispatch(deleteAirCraft({ aircraftId: taskToRemove.aircraftId } as any));
+      }
+      dispatch(removeTask(id));
+    }
+  }, [dispatch, tasksFromState]);
 
   const handleTaskDeleted = useCallback((taskData: any) => {
     const id = typeof taskData === 'string' ? taskData : taskData?.id;
-    if (id) dispatch(removeTask(id));
-  }, [dispatch]);
+    if (id) {
+      // Находим удаляемую задачу и если у неё есть aircraftId, удаляем дрон
+      const taskToRemove = tasksFromState.find((t: any) => t.id === id);
+      if (taskToRemove && 'aircraftId' in taskToRemove && taskToRemove.aircraftId) {
+        dispatch(deleteAirCraft({ aircraftId: taskToRemove.aircraftId } as any));
+      }
+      dispatch(removeTask(id));
+    }
+  }, [dispatch, tasksFromState]);
 
   // REFPOINT handlers
   const handleRefPointCreated = useCallback((refPointData: any) => {
@@ -156,6 +210,14 @@ export default function MainPage() {
   const handleRefPointDeleted = useCallback(() => {
     dispatch(setReperDot({ lat: null, lng: null }))
   }, [dispatch])
+
+  //   const handleAirCraftExtrapolation = useCallback((airCraftData) => {
+  //   dispatch(updateAircraftType(airCraftData))
+  // }, [dispatch]);
+
+  // const handleAirCraftExtrapolationDelete =useCallback((airCraftData) => {
+  //   dispatch(deleteAirCraft(airCraftData))
+  // }, [dispatch])
 
   // const handleMogConnected = useCallback((mogConnectedData) => {
   //   dispatch(updateMog())
@@ -186,6 +248,9 @@ export default function MainPage() {
     [ALL_TOPICS.TASK_COMPLETED]: handleTaskCompleted,
     [ALL_TOPICS.TASK_REMOVED]: handleTaskRemoved,
     [ALL_TOPICS.TASK_DELETED]: handleTaskDeleted,
+    // EXTAPOLATION
+    [ALL_TOPICS.AIRCRAFT_EXTRAPOLATION]: handleAirCraftUpdated,
+    [ALL_TOPICS.AIRCRAFT_EXTRAPOLATION_DELETE]: handleAirCraftDelete,
     // [ALL_TOPICS.MOG_CONNECTED]:
   }), [handleMogQuit, handleMogUpdate, handleMogDisconnected, handleMogEntered, handleAirCraftUpdated, handleAirCraftDelete, handleAirCraftLost, handleRefPointCreated, handleRefPointUpdated, handleRefPointDeleted, handleTaskCreated, handleTaskEdited, handleTaskImpacted, handleTaskAccepted, handleTaskRejected, handleTaskCompleted, handleTaskRemoved, handleTaskDeleted]);
 

@@ -1,5 +1,5 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit"
-import { AircraftType, TYPE } from "../../types/types"
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { AircraftType, TYPE } from "../../types/types";
 
 export type ClassificationType = {
   color: string,
@@ -40,6 +40,12 @@ export const airCraftsSlice = createSlice({
     // Меняет параметры дрона если изменились
     updateAircraftType: (state, action: PayloadAction<AircraftType>) => {
       const updatedAirCraft = action.payload;
+      console.log('[AircraftSlice] updateAircraftType called:', {
+        aircraftId: updatedAirCraft.aircraftId,
+        type: updatedAirCraft.type,
+        coordinates: updatedAirCraft.coordinates,
+        currentStateLength: state.data.length
+      });
       const index = state.data.findIndex(
         airCraft => airCraft.aircraftId === updatedAirCraft.aircraftId
       );
@@ -57,12 +63,14 @@ export const airCraftsSlice = createSlice({
           ...updatedAirCraft,
           coordinates: [...existing.coordinates, ...incomingCoordinates],
         };
+        console.log('[AircraftSlice] Aircraft updated at index', index, 'new state length:', state.data.length);
       } else {
         // Если новый объект
         state.data.push({
           ...updatedAirCraft,
           coordinates: incomingCoordinates,
         });
+        console.log('[AircraftSlice] New aircraft added, new state length:', state.data.length);
       }
     },
 

@@ -175,6 +175,10 @@ export enum ALL_TOPICS {
   TASK_COMPLETED = 'task-completed',
   TASK_REMOVED = 'task-removed',
   TASK_DELETED = 'task-deleted',
+  
+  // EXTAPOLATION
+  AIRCRAFT_EXTRAPOLATION = 'aircraft-extrapolation',
+  AIRCRAFT_EXTRAPOLATION_DELETE = 'aircraft-extrapolation-delete',
 }
 
 

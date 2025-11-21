@@ -1,8 +1,8 @@
 import { selectBaseUrl } from "@/store/reducers/appSettingsSlice";
 import { GlobalStateResponse } from "@/types/types";
+import { safeSlice } from "@/utils/safeSlice";
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { buildDynamicBaseQueryWithReauth } from "./baseQueryWithReauth";
-import { safeSlice } from "@/utils/safeSlice";
 
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 const customBaseQuery: BaseQueryFn<FetchArgs | string, unknown, FetchBaseQueryError> = buildDynamicBaseQueryWithReauth(selectBaseUrl);
@@ -13,7 +13,7 @@ export const globalState = createApi({
   endpoints: (builder) => ({
     getGlobalState: builder.query<GlobalStateResponse, void>({
       query: () => ({
-        url: "/state/api/global-state",
+        url: "/api/global-state",
         method: "GET",
       }),
       async onQueryStarted(_arg, { queryFulfilled }) {
